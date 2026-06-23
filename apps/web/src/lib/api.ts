@@ -129,6 +129,15 @@ export interface ApplicationPreparation {
   };
 }
 
+export type PreparationPipeline = NonNullable<ApplicationPreparation['pipeline']>;
+
+export class ApplicationPreparationStoppedError extends Error {
+  constructor(message: string, readonly pipeline: PreparationPipeline) {
+    super(message);
+    this.name = 'ApplicationPreparationStoppedError';
+  }
+}
+
 export async function getAIHealth(input: { provider: PreparationProvider; ollamaBaseUrl: string; ollamaModel: string }): Promise<AIHealthResponse> {
   const query = new URLSearchParams({ provider: input.provider, ollamaBaseUrl: input.ollamaBaseUrl, ollamaModel: input.ollamaModel });
   const response = await fetch(`${apiBaseUrl}/api/ai/health?${query}`);
@@ -147,6 +156,7 @@ export async function testAIConnection(input: { provider: PreparationProvider; o
 export async function prepareApplication(input: { jobId: string; cvProfileId: string; provider: PreparationProvider; ollamaBaseUrl?: string; ollamaModel?: string }): Promise<ApplicationPreparation> {
   const response = await fetch(`${apiBaseUrl}/api/applications/prepare`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) });
   const payload = await response.json() as { application?: ApiApplication; generatedCv?: ApiGeneratedCV; analysis?: ApplicationPreparation['analysis']; provider?: ApplicationPreparation['provider']; warnings?: string[]; pipeline?: ApplicationPreparation['pipeline']; error?: string };
+  if (response.status === 422 && payload.pipeline) throw new ApplicationPreparationStoppedError(payload.error ?? 'Pipeline yüksek risk nedeniyle durduruldu.', payload.pipeline);
   if (!response.ok || !payload.application || !payload.generatedCv || !payload.analysis || !payload.provider) throw new Error(payload.error ?? `Başvuru taslağı hazırlanamadı: ${response.status}`);
   return { application: normalizeApplication(payload.application), generatedCv: normalizeGeneratedCV(payload.generatedCv), analysis: payload.analysis, provider: payload.provider, warnings: payload.warnings ?? [], pipeline: payload.pipeline };
 }
