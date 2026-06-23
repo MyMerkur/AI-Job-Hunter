@@ -6,6 +6,7 @@ import type { ApplicationStatus } from '@ai-job-hunter/shared';
 import { HttpError } from '../lib/http-error.js';
 import { ApplicationLogModel } from '../models/application-log.model.js';
 import { ApplicationModel } from '../models/application.model.js';
+import { ApplicationAssistantTaskModel } from '../models/application-assistant-task.model.js';
 import { CVProfileModel } from '../models/cv-profile.model.js';
 import { GeneratedCVModel } from '../models/generated-cv.model.js';
 import { JobModel } from '../models/job.model.js';
@@ -85,6 +86,31 @@ applicationRouter.get('/', async (_request, response) => {
   const jobs = await JobModel.find({ _id: { $in: applications.map((application) => application.jobId) } }).select('title company score');
   const jobsById = new Map(jobs.map((job) => [job._id.toString(), job]));
   response.json({ applications: applications.map((application) => ({ application, job: jobsById.get(application.jobId.toString()) ?? null })) });
+});
+
+applicationRouter.post('/:id/start-assistant', async (request, response) => {
+  const applicationId = requiredObjectId(request.params.id, 'applicationId');
+  const application = await ApplicationModel.findById(applicationId);
+  if (!application) throw new HttpError(404, 'Application bulunamadı.');
+  const activeTask = await ApplicationAssistantTaskModel.findOne({ applicationId: application._id, status: { $in: ['queued', 'running'] } }).sort({ createdAt: -1 });
+  if (activeTask) {
+    response.status(202).json({ task: activeTask, message: 'Application assistant görevi zaten sırada veya çalışıyor.' });
+    return;
+  }
+  const task = await ApplicationAssistantTaskModel.create({ applicationId: application._id, status: 'queued' });
+  await ApplicationLogModel.create({ applicationId: application._id, action: 'assistant_queued', message: 'Playwright application assistant görevi kuyruğa eklendi. Başvuru gönderilmeyecek.', metadata: { taskId: task._id.toString() } });
+  response.status(202).json({ task, message: 'Application assistant görevi kuyruğa eklendi.' });
+});
+
+applicationRouter.get('/:id/logs', async (request, response) => {
+  const applicationId = requiredObjectId(request.params.id, 'applicationId');
+  const application = await ApplicationModel.exists({ _id: applicationId });
+  if (!application) throw new HttpError(404, 'Application bulunamadı.');
+  const [logs, task] = await Promise.all([
+    ApplicationLogModel.find({ applicationId }).sort({ createdAt: 1 }),
+    ApplicationAssistantTaskModel.findOne({ applicationId }).sort({ createdAt: -1 }),
+  ]);
+  response.json({ logs, task });
 });
 
 applicationRouter.get('/:id', async (request, response) => {

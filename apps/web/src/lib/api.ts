@@ -88,6 +88,7 @@ function normalizeLog(log: ApiApplicationLog): ApplicationLog { return { ...log,
 
 export interface ApplicationListItem { application: Application; job: Pick<Job, 'id' | 'title' | 'company' | 'score'> | null; }
 export interface ApplicationDetail extends ApplicationListItem { generatedCv: GeneratedCV | null; logs: ApplicationLog[]; }
+export interface ApplicationAssistantTask { id: string; status: 'queued' | 'running' | 'completed' | 'failed'; error?: string; createdAt?: string; startedAt?: string; completedAt?: string; }
 
 export async function getApplications(): Promise<ApplicationListItem[]> {
   const response = await fetch(`${apiBaseUrl}/api/applications`);
@@ -108,6 +109,23 @@ export async function updateApplicationStatus(id: string, status: ApplicationSta
   const payload = await response.json() as { application?: ApiApplication; error?: string };
   if (!response.ok || !payload.application) throw new Error(payload.error ?? `Başvuru durumu güncellenemedi: ${response.status}`);
   return normalizeApplication(payload.application);
+}
+
+type ApiAssistantTask = Omit<ApplicationAssistantTask, 'id'> & { id?: string; _id?: string };
+function normalizeAssistantTask(task: ApiAssistantTask): ApplicationAssistantTask { return { ...task, id: task.id ?? task._id ?? '' }; }
+
+export async function startApplicationAssistant(id: string): Promise<ApplicationAssistantTask> {
+  const response = await fetch(`${apiBaseUrl}/api/applications/${id}/start-assistant`, { method: 'POST' });
+  const payload = await response.json() as { task?: ApiAssistantTask; error?: string };
+  if (!response.ok || !payload.task) throw new Error(payload.error ?? `Asistan başlatılamadı: ${response.status}`);
+  return normalizeAssistantTask(payload.task);
+}
+
+export async function getApplicationLogs(id: string): Promise<{ logs: ApplicationLog[]; task: ApplicationAssistantTask | null }> {
+  const response = await fetch(`${apiBaseUrl}/api/applications/${id}/logs`);
+  const payload = await response.json() as { logs?: ApiApplicationLog[]; task?: ApiAssistantTask | null; error?: string };
+  if (!response.ok || !payload.logs) throw new Error(payload.error ?? `Asistan logları alınamadı: ${response.status}`);
+  return { logs: payload.logs.map(normalizeLog), task: payload.task ? normalizeAssistantTask(payload.task) : null };
 }
 
 export function generatedCvMarkdownDownloadUrl(id: string): string { return `${apiBaseUrl}/api/generated-cv/${id}/download/markdown`; }

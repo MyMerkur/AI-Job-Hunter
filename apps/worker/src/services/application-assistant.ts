@@ -81,11 +81,12 @@ export async function assistApplication(applicationId: string): Promise<void> {
     await fillFirst(page, ['input[type="tel"]', 'input[name*="phone" i]', 'input[id*="phone" i]'], contact.phone, 'phone', application._id);
     await fillFirst(page, ['textarea[name*="cover" i]', 'textarea[name*="letter" i]', 'textarea[name*="motivation" i]', 'textarea'], generatedCv?.coverLetterContent, 'cover_letter', application._id);
 
-    if (generatedCv?.filePath && existsSync(generatedCv.filePath)) {
+    const cvFilePath = generatedCv?.pdfPath ?? generatedCv?.filePath;
+    if (cvFilePath && existsSync(cvFilePath)) {
       const fileInput = page.locator('input[type="file"]').first();
       if (await fileInput.count() > 0 && await fileInput.isVisible().catch(() => true)) {
-        await fileInput.setInputFiles(generatedCv.filePath);
-        await log(application._id, 'file_uploaded', 'Oluşturulan CV dosyası forma yüklendi.', { filePath: generatedCv.filePath });
+        await fileInput.setInputFiles(cvFilePath);
+        await log(application._id, 'file_uploaded', 'Oluşturulan CV PDF dosyası forma yüklendi.', { filePath: cvFilePath });
       }
     } else {
       await log(application._id, 'file_upload_skipped', 'Yüklenecek oluşturulmuş CV dosyası bulunamadı; markdown taslağı dosya yerine kullanılamaz.');
