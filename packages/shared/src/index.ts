@@ -97,6 +97,7 @@ export interface GeneratedCV {
   content: string;
   coverLetterContent: string;
   provider?: AIProviderName;
+  filePath?: string;
   format: 'text' | 'markdown' | 'pdf' | 'docx';
   status: GeneratedCvStatus;
   createdAt: ISODateString;

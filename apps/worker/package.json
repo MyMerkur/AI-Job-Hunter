@@ -17,14 +17,13 @@
     "scrape:startupjobs": "tsx src/index.ts scrape:startupjobs",
     "scrape:jobs": "tsx src/index.ts scrape:jobs",
     "scrape:mock": "tsx src/index.ts scrape:mock",
-    "score:jobs": "tsx src/index.ts score:jobs"
+    "score:jobs": "tsx src/index.ts score:jobs",
+    "assist:application": "tsx src/index.ts assist:application"
   },
   "dependencies": {
     "@ai-job-hunter/scoring": "workspace:*",
     "@ai-job-hunter/shared": "workspace:*",
-    "@ai-job-hunter/scoring": "workspace:*",
     "dotenv": "^16.5.0",
-    "mongoose": "^9.7.2",
     "mongoose": "^9.7.2",
     "playwright": "^1.52.0"
   },

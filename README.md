@@ -52,6 +52,16 @@ pnpm --filter worker score:jobs
 
 The deterministic development fixture remains available as `pnpm --filter worker scrape:mock`.
 
+## Application form assistant
+
+The assistant opens an existing application’s public job URL, optionally opens its apply form, fills known fields, and stops before submission. It never clicks a final submit/send button. A visible browser is the default; close it manually when your review is complete.
+
+```bash
+pnpm --filter worker assist:application APPLICATION_ID
+```
+
+Set `APPLY_ASSISTANT_HEADLESS=true` only for diagnostic runs; a headless run closes after filling and still never submits.
+
 ## AI providers
 
 `packages/ai` has no paid API dependency. `RuleBasedAIProvider` produces deterministic drafts, `OllamaProvider` is a non-network placeholder that reads `OLLAMA_BASE_URL`, and `ManualChatGPTProvider` saves copyable prompts in `generated/prompts` (Git-ignored). ChatGPT Plus does not provide backend API access; use the manual provider to paste prompts into ChatGPT’s web interface.
