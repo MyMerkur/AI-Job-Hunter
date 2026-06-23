@@ -4,14 +4,14 @@ import { saveMockJobs } from './services/mock-scraper.js';
 import { scoreJobs } from './services/job-scorer.js';
 import { scrapeStartupJobs } from './services/startupjobs-scraper.js';
 import { assistApplication } from './services/application-assistant.js';
-import { runApplicationAssistantQueue } from './services/application-assistant-queue.js';
+import { runTaskQueue } from './services/task-queue.js';
 
 type WorkerCommand = 'scrape:startupjobs' | 'scrape:jobs' | 'scrape:mock' | 'score:jobs' | 'assist:application';
 
 async function run(command: WorkerCommand | undefined, argument?: string): Promise<void> {
   if (!command) {
     await connectToDatabase(env.mongoUri);
-    await runApplicationAssistantQueue(env.applicationAssistantPollIntervalMs);
+    await runTaskQueue(env.taskPollIntervalMs);
     return;
   }
   if (!['scrape:startupjobs', 'scrape:jobs', 'scrape:mock', 'score:jobs', 'assist:application'].includes(command)) {

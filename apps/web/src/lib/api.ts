@@ -1,4 +1,4 @@
-import type { Application, ApplicationLog, ApplicationStatus, CVProfile, GeneratedCV, HealthResponse, Job, JobStatus } from '@ai-job-hunter/shared';
+import type { Application, ApplicationLog, ApplicationStatus, CVProfile, GeneratedCV, HealthResponse, Job, JobStatus, Task } from '@ai-job-hunter/shared';
 
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001').replace(/\/$/, '');
 
@@ -88,7 +88,7 @@ function normalizeLog(log: ApiApplicationLog): ApplicationLog { return { ...log,
 
 export interface ApplicationListItem { application: Application; job: Pick<Job, 'id' | 'title' | 'company' | 'score'> | null; }
 export interface ApplicationDetail extends ApplicationListItem { generatedCv: GeneratedCV | null; logs: ApplicationLog[]; }
-export interface ApplicationAssistantTask { id: string; status: 'queued' | 'running' | 'completed' | 'failed'; error?: string; createdAt?: string; startedAt?: string; completedAt?: string; }
+export interface ApplicationAssistantTask { id: string; status: 'pending' | 'running' | 'completed' | 'failed'; error?: string; createdAt?: string; updatedAt?: string; }
 
 export async function getApplications(): Promise<ApplicationListItem[]> {
   const response = await fetch(`${apiBaseUrl}/api/applications`);
@@ -126,6 +126,16 @@ export async function getApplicationLogs(id: string): Promise<{ logs: Applicatio
   const payload = await response.json() as { logs?: ApiApplicationLog[]; task?: ApiAssistantTask | null; error?: string };
   if (!response.ok || !payload.logs) throw new Error(payload.error ?? `Asistan logları alınamadı: ${response.status}`);
   return { logs: payload.logs.map(normalizeLog), task: payload.task ? normalizeAssistantTask(payload.task) : null };
+}
+
+type ApiTask = Omit<Task, 'id'> & { id?: string; _id?: string };
+function normalizeTask(task: ApiTask): Task { return { ...task, id: task.id ?? task._id ?? '' }; }
+
+export async function getTasks(): Promise<Task[]> {
+  const response = await fetch(`${apiBaseUrl}/api/tasks`);
+  const payload = await response.json() as { tasks?: ApiTask[]; error?: string };
+  if (!response.ok || !payload.tasks) throw new Error(payload.error ?? `Task listesi alınamadı: ${response.status}`);
+  return payload.tasks.map(normalizeTask);
 }
 
 export function generatedCvMarkdownDownloadUrl(id: string): string { return `${apiBaseUrl}/api/generated-cv/${id}/download/markdown`; }

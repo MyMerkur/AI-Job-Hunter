@@ -10,6 +10,8 @@ export type JobAnalysisStatus = 'pending' | 'completed' | 'failed';
 export type GeneratedCvStatus = 'draft' | 'ready' | 'archived';
 export type ApplicationStatus = 'draft' | 'prepared' | 'reviewed' | 'ready_for_review' | 'submitted' | 'withdrawn' | 'rejected' | 'interviewing' | 'offer' | 'applied' | 'failed';
 export type AIProviderName = 'rule_based' | 'manual_chatgpt' | 'ollama';
+export type TaskType = 'scrape_jobs' | 'score_jobs' | 'prepare_application' | 'start_application_assistant';
+export type TaskStatus = 'pending' | 'running' | 'completed' | 'failed';
 export type RemoteType = 'remote' | 'hybrid' | 'onsite' | 'unknown';
 
 export interface User {
@@ -124,6 +126,19 @@ export interface ApplicationLog {
   message: string;
   metadata?: Record<string, unknown>;
   createdAt: ISODateString;
+}
+
+export interface TaskLog { message: string; createdAt: ISODateString; }
+export interface Task {
+  id: EntityId;
+  type: TaskType;
+  payload: Record<string, unknown>;
+  status: TaskStatus;
+  attempts: number;
+  error?: string;
+  logs: TaskLog[];
+  createdAt: ISODateString;
+  updatedAt: ISODateString;
 }
 
 // Backward-compatible first-pass contracts.
