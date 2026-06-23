@@ -1,16 +1,13 @@
-import 'dotenv/config';
-import cors from 'cors';
-import express from 'express';
-import type { HealthResponse } from '@ai-job-hunter/shared';
+import { app } from './app.js';
+import { env } from './config/env.js';
+import { connectToDatabase } from './db/connect.js';
 
-const app = express();
-app.use(cors({ origin: process.env.CORS_ORIGIN ?? 'http://localhost:5173' }));
-app.use(express.json());
+async function start(): Promise<void> {
+  await connectToDatabase(env.mongoUri);
+  app.listen(env.port, () => console.log(`API listening on http://localhost:${env.port}`));
+}
 
-app.get('/health', (_request, response) => {
-  const payload: HealthResponse = { status: 'ok', service: 'api' };
-  response.json(payload);
+start().catch((error: unknown) => {
+  console.error('Failed to start API:', error);
+  process.exitCode = 1;
 });
-
-const port = Number(process.env.API_PORT ?? 3001);
-app.listen(port, () => console.log(`API listening on http://localhost:${port}`));

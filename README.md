@@ -14,7 +14,7 @@ Local-first tooling to upload a CV, discover and score job listings, prepare tai
 
 ## Setup
 
-Prerequisites: Node.js 22+ and pnpm 10+ (`corepack enable` can provide pnpm with supported Node installations).
+Prerequisites: Node.js 22+, pnpm 10+ (`corepack enable` can provide pnpm with supported Node installations), and a running local MongoDB instance.
 
 ```bash
 cp .env.example .env
@@ -24,6 +24,7 @@ pnpm dev
 ```
 
 Open `http://localhost:5173`; the API is at `http://localhost:3001/health`.
+Set `MONGODB_URI` in `.env` when MongoDB is not running at the default local address.
 
 Useful checks:
 

@@ -122,4 +122,8 @@ export interface JobListing {
 }
 export interface CandidateProfile { skills: string[]; summary?: string; }
 export interface JobScore { score: number; matchedSkills: string[]; missingSkills: string[]; reasons: string[]; }
-export interface HealthResponse { status: 'ok'; service: 'api'; }
+export interface HealthResponse {
+  status: 'ok' | 'degraded';
+  service: 'api';
+  database: 'connected' | 'disconnected';
+}
