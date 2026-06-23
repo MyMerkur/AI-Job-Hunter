@@ -18,7 +18,8 @@
     "scrape:jobs": "tsx src/index.ts scrape:jobs",
     "scrape:mock": "tsx src/index.ts scrape:mock",
     "score:jobs": "tsx src/index.ts score:jobs",
-    "assist:application": "tsx src/index.ts assist:application"
+    "assist:application": "tsx src/index.ts assist:application",
+    "run:auto": "tsx src/index.ts run:auto"
   },
   "dependencies": {
     "@ai-job-hunter/scoring": "workspace:*",

@@ -29,6 +29,10 @@ export async function scoreJobs(jobs?: WorkerJobHydratedDocument[]): Promise<voi
       score: result.score, decision: result.decision, status: statusForDecision(result.decision),
       scoreDetails: { positiveSignals: result.positiveSignals, negativeSignals: result.negativeSignals, risks: result.risks },
     } });
+    job.score = result.score;
+    job.decision = result.decision;
+    job.status = statusForDecision(result.decision);
+    job.scoreDetails = { positiveSignals: result.positiveSignals, negativeSignals: result.negativeSignals, risks: result.risks };
     console.log(`${job.title}: ${result.score}/100 (${result.decision})`);
   }
   console.log(`Scored ${records.length} job records.`);
