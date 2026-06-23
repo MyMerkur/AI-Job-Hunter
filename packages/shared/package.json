@@ -1,0 +1,8 @@
+{
+  "name": "@ai-job-hunter/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "build": "tsc", "lint": "tsc --noEmit", "typecheck": "tsc --noEmit" }
+}

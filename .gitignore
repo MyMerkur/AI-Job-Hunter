@@ -1,8 +1,7 @@
 node_modules
+dist
+.turbo
 .env
 .env.local
-dist
-build
-.DS_Store
-uploads
-generated
+playwright-report
+test-results
