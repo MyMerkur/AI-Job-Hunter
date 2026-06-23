@@ -57,8 +57,13 @@ cvRouter.post('/upload', upload.single('file'), async (request, response) => {
   }
 
   try {
+    const startedAt = Date.now();
+    console.info(`[cv-upload] received type=${fileType} sizeBytes=${request.file.size}`);
     await validateFileSignature(request.file.path, fileType);
-    const rawText = await extractCvText(request.file.path, fileType);
+    console.info('[cv-upload] signature verified; extracting text');
+    const rawText = await extractCvText(request.file.path, fileType, env.cvExtractionTimeoutMs);
+    console.info(`[cv-upload] text extracted characters=${rawText.length} durationMs=${Date.now() - startedAt}`);
+    console.info('[cv-upload] creating CV profile in MongoDB');
     const profile = await CVProfileModel.create({
       name: request.body.name?.trim() || request.file.originalname.replace(/\.[^.]+$/, ''),
       rawText,
@@ -66,8 +71,10 @@ cvRouter.post('/upload', upload.single('file'), async (request, response) => {
       skills: [],
       status: 'draft',
     });
+    console.info(`[cv-upload] completed profileId=${profile.id} totalDurationMs=${Date.now() - startedAt}`);
     response.status(201).json({ profile });
   } catch (error) {
+    console.error('[cv-upload] failed:', error);
     await unlink(request.file.path).catch(() => undefined);
     throw error;
   }

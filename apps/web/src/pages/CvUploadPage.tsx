@@ -61,7 +61,7 @@ export function CvUploadPage() {
         <label className="file-picker" htmlFor="cv-file"><strong>{selectedFile ? selectedFile.name : 'PDF veya DOCX seçin'}</strong><span>{selectedFile ? formatFileSize(selectedFile.size) : 'En fazla 10 MB'}</span></label>
         <input id="cv-file" className="visually-hidden" type="file" accept={acceptedTypes} onChange={handleFileChange} disabled={isUploading} />
         {isUploading && <div className="progress" aria-label={`Yükleme: ${progress ?? 0}%`}><span style={{ width: `${progress ?? 0}%` }} /></div>}
-        {isUploading && <p className="muted">Yükleniyor ve metin çıkarılıyor… %{progress ?? 0}</p>}
+        {isUploading && <p className="muted">{progress === 100 ? 'Dosya yüklendi. Sunucuda metin çıkarılıyor ve profil kaydediliyor…' : `Dosya yükleniyor… %${progress ?? 0}`}</p>}
         {error && <p className="form-error" role="alert">{error}</p>}
         <button type="submit" disabled={!selectedFile || isUploading}>{isUploading ? 'Yükleniyor…' : 'CV yükle'}</button>
       </form>

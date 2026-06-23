@@ -8,7 +8,12 @@ import { assistApplication } from './services/application-assistant.js';
 type WorkerCommand = 'scrape:startupjobs' | 'scrape:jobs' | 'scrape:mock' | 'score:jobs' | 'assist:application';
 
 async function run(command: WorkerCommand | undefined, argument?: string): Promise<void> {
-  if (!command || !['scrape:startupjobs', 'scrape:jobs', 'scrape:mock', 'score:jobs', 'assist:application'].includes(command)) {
+  if (!command) {
+    console.log('Worker ready. Run a scrape, score, or assist:application command when needed.');
+    await new Promise<void>(() => undefined);
+    return;
+  }
+  if (!['scrape:startupjobs', 'scrape:jobs', 'scrape:mock', 'score:jobs', 'assist:application'].includes(command)) {
     throw new Error('Usage: scrape:startupjobs | scrape:jobs | scrape:mock | score:jobs | assist:application <applicationId>');
   }
   await connectToDatabase(env.mongoUri);

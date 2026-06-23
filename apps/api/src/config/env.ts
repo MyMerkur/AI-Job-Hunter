@@ -25,10 +25,16 @@ if (!Number.isSafeInteger(parsedCvUploadMaxBytes) || parsedCvUploadMaxBytes < 1)
   throw new Error('CV_UPLOAD_MAX_BYTES must be a positive integer.');
 }
 
+const parsedCvExtractionTimeoutMs = Number(process.env.CV_TEXT_EXTRACTION_TIMEOUT_MS ?? 30_000);
+if (!Number.isSafeInteger(parsedCvExtractionTimeoutMs) || parsedCvExtractionTimeoutMs < 1_000) {
+  throw new Error('CV_TEXT_EXTRACTION_TIMEOUT_MS must be at least 1000 milliseconds.');
+}
+
 export const env = {
   port: parsedPort,
   corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
   mongoUri: required('MONGODB_URI'),
   cvUploadMaxBytes: parsedCvUploadMaxBytes,
+  cvExtractionTimeoutMs: parsedCvExtractionTimeoutMs,
   cvUploadDirectory: resolve(currentDirectory, '../../../../uploads/cv'),
 };

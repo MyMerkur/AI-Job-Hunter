@@ -12,8 +12,9 @@ export const errorHandler: ErrorRequestHandler = (error, _request, response, _ne
 
   const statusCode = error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE'
     ? 413
-    : error instanceof HttpError ? error.statusCode : 500;
+    : error instanceof HttpError ? error.statusCode
+      : typeof error?.statusCode === 'number' ? error.statusCode : 500;
   response.status(statusCode).json({
-    error: statusCode >= 500 ? 'Internal server error' : error.message,
+    error: statusCode === 503 || statusCode < 500 ? error.message : 'Internal server error',
   });
 };

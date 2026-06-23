@@ -64,7 +64,7 @@ Set `APPLY_ASSISTANT_HEADLESS=true` only for diagnostic runs; a headless run clo
 
 ## AI providers
 
-`packages/ai` has no paid API dependency. `RuleBasedAIProvider` produces deterministic drafts, `OllamaProvider` is a non-network placeholder that reads `OLLAMA_BASE_URL`, and `ManualChatGPTProvider` saves copyable prompts in `generated/prompts` (Git-ignored). ChatGPT Plus does not provide backend API access; use the manual provider to paste prompts into ChatGPT’s web interface.
+`packages/ai` has no paid API dependency. `RuleBasedAIProvider` produces deterministic drafts. `OllamaProvider` calls the local `/api/generate` endpoint using `OLLAMA_BASE_URL` and `OLLAMA_MODEL`; it returns a clear 503 error if Ollama or the selected model is unavailable. `ManualChatGPTProvider` saves copyable prompts in `generated/prompts` (Git-ignored). ChatGPT Plus does not provide backend API access; use the manual provider to paste prompts into ChatGPT’s web interface.
 
 ## CV upload API
 
@@ -77,6 +77,7 @@ curl -X POST http://localhost:3001/api/cv/upload \
 ```
 
 Files are stored locally in `uploads/cv`, which is intentionally ignored by Git. List and detail endpoints are `GET /api/cv` and `GET /api/cv/:id`.
+The API terminal logs upload stages as `[cv-upload]`; extraction is limited by `CV_TEXT_EXTRACTION_TIMEOUT_MS` (30 seconds by default).
 
 ## Jobs API
 

@@ -29,12 +29,20 @@ export function uploadCv(file: File, name: string, onProgress: (percent: number)
 
     const request = new XMLHttpRequest();
     request.open('POST', `${apiBaseUrl}/api/cv/upload`);
+    request.timeout = 45_000;
     request.upload.onprogress = (event) => {
       if (event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100));
     };
     request.onerror = () => reject(new Error('API ile bağlantı kurulamadı.'));
+    request.ontimeout = () => reject(new Error('CV yükleme isteği 45 saniye içinde tamamlanmadı. API terminalindeki [cv-upload] loglarını kontrol edin.'));
     request.onload = () => {
-      const payload = request.responseText ? JSON.parse(request.responseText) as { profile?: ApiCvProfile; error?: string } : {};
+      let payload: { profile?: ApiCvProfile; error?: string } = {};
+      try {
+        payload = request.responseText ? JSON.parse(request.responseText) as { profile?: ApiCvProfile; error?: string } : {};
+      } catch {
+        reject(new Error(`API geçerli JSON döndürmedi (HTTP ${request.status}). Doğru API sürecinin 3001 portunda çalıştığını kontrol edin.`));
+        return;
+      }
       if (request.status >= 200 && request.status < 300 && payload.profile) resolve(normalizeCvProfile(payload.profile));
       else reject(new Error(payload.error ?? `Yükleme başarısız: ${request.status}`));
     };
@@ -100,4 +108,18 @@ export async function updateApplicationStatus(id: string, status: ApplicationSta
   const payload = await response.json() as { application?: ApiApplication; error?: string };
   if (!response.ok || !payload.application) throw new Error(payload.error ?? `Başvuru durumu güncellenemedi: ${response.status}`);
   return normalizeApplication(payload.application);
+}
+
+export type PreparationProvider = 'rule_based' | 'manual_chatgpt' | 'ollama';
+export interface ApplicationPreparation {
+  application: Application;
+  generatedCv: GeneratedCV;
+  analysis: { score: number; decision: 'apply' | 'maybe' | 'ignore'; positiveSignals: string[]; negativeSignals: string[]; risks: string[]; provider: string; manualPrompt?: string; promptPath?: string };
+}
+
+export async function prepareApplication(input: { jobId: string; cvProfileId: string; provider: PreparationProvider }): Promise<ApplicationPreparation> {
+  const response = await fetch(`${apiBaseUrl}/api/applications/prepare`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) });
+  const payload = await response.json() as { application?: ApiApplication; generatedCv?: ApiGeneratedCV; analysis?: ApplicationPreparation['analysis']; error?: string };
+  if (!response.ok || !payload.application || !payload.generatedCv || !payload.analysis) throw new Error(payload.error ?? `Başvuru taslağı hazırlanamadı: ${response.status}`);
+  return { application: normalizeApplication(payload.application), generatedCv: normalizeGeneratedCV(payload.generatedCv), analysis: payload.analysis };
 }
