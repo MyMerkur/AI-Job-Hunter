@@ -1,1 +1,1 @@
-{"root":["./src/app.tsx","./src/main.tsx","./vite.config.ts"],"version":"5.9.3"}
+{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/lib/api.ts","./src/pages/applicationspage.tsx","./src/pages/cvuploadpage.tsx","./src/pages/dashboardpage.tsx","./src/pages/jobdetailpage.tsx","./src/pages/jobspage.tsx","./src/pages/logspage.tsx","./src/pages/placeholderpage.tsx","./src/pages/settingspage.tsx","./src/pages/index.ts","./vite.config.ts"],"version":"5.9.3"}

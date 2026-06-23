@@ -1,23 +1,25 @@
-import { scoreJob } from '@ai-job-hunter/scoring';
+import { NavLink, Outlet } from 'react-router-dom';
 
-const demoScore = scoreJob({
-  title: 'TypeScript Developer',
-  description: 'Build React and Node.js products with TypeScript.',
-  source: 'demo',
-  url: 'https://example.com/jobs/typescript-developer',
-}, { skills: ['TypeScript', 'React', 'Node.js'] });
+const navigation = [
+  ['Dashboard', '/'], ['CV Upload', '/cv-upload'], ['Jobs', '/jobs'],
+  ['Applications', '/applications'], ['Logs', '/logs'], ['Settings', '/settings'],
+] as const;
 
 export function App() {
   return (
-    <main>
-      <p className="eyebrow">AI JOB HUNTER</p>
-      <h1>Your job search, with a thoughtful co-pilot.</h1>
-      <p className="lede">Upload a CV, discover roles, and review tailored application material before anything is sent.</p>
-      <section>
-        <h2>Baseline is running</h2>
-        <p>Example rule-based match: <strong>{demoScore.score}%</strong></p>
-        <p className="muted">Next: CV upload, job-source integrations, and a review queue.</p>
-      </section>
-    </main>
+    <div className="app-shell">
+      <aside className="sidebar">
+        <NavLink className="brand" to="/">AI <span>Job Hunter</span></NavLink>
+        <nav aria-label="Ana menü">
+          {navigation.map(([label, to]) => (
+            <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+              {label}
+            </NavLink>
+          ))}
+        </nav>
+        <p className="sidebar-note">Başvurular, gönderilmeden önce her zaman sizin incelemenize sunulur.</p>
+      </aside>
+      <main className="page-content"><Outlet /></main>
+    </div>
   );
 }
