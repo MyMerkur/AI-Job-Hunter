@@ -4,6 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "predev": "pnpm --filter @ai-job-hunter/scoring build",
+    "prescrape:startupjobs": "pnpm --filter @ai-job-hunter/scoring build",
+    "prescrape:jobs": "pnpm --filter @ai-job-hunter/scoring build",
+    "prescore:jobs": "pnpm --filter @ai-job-hunter/scoring build",
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",

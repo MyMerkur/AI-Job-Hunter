@@ -23,6 +23,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@ai-job-hunter/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@ai-job-hunter/shared':
         specifier: workspace:*
         version: link:../../packages/shared

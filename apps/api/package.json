@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "predev": "pnpm --filter @ai-job-hunter/scoring build && pnpm --filter @ai-job-hunter/ai build",
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
@@ -11,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@ai-job-hunter/ai": "workspace:*",
     "@ai-job-hunter/shared": "workspace:*",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",

@@ -70,6 +70,10 @@ Files are stored locally in `uploads/cv`, which is intentionally ignored by Git.
 
 `GET /api/jobs` returns jobs ordered by `score` descending then `createdAt` descending. Optional query filters are `source`, `status`, `minScore`, and `decision`. Update a workflow status with `PATCH /api/jobs/:id/status` and a JSON body such as `{ "status": "saved" }`.
 
+## Application preparation API
+
+`POST /api/applications/prepare` accepts `jobId`, `cvProfileId`, and a free provider (`rule_based`, `manual_chatgpt`, or `ollama`). It only creates reviewed drafts: tailored CV markdown, cover-letter markdown, an application with `prepared` status, and audit logs. It never submits an application.
+
 ## Deliberate gaps before product work
 
 - CV file storage and secure PDF/DOCX text extraction
