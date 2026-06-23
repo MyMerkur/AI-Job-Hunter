@@ -39,9 +39,9 @@ To run the worker in non-submitting inspection mode:
 pnpm --filter @ai-job-hunter/worker dev -- https://example.com
 ```
 
-## Mock job worker
+## StartupJobs scraper
 
-The worker currently writes five deterministic sample jobs to MongoDB; it does not scrape or apply to real websites.
+The StartupJobs worker only visits public pages slowly, does not log in, and stops when it encounters a CAPTCHA/challenge. It never submits applications. `STARTUPJOBS_MAX_JOBS` caps each run (default: 20) and `STARTUPJOBS_REQUEST_DELAY_MS` controls the pause between requests (default: 2500 ms).
 
 ```bash
 pnpm --filter worker playwright:install
@@ -49,6 +49,8 @@ pnpm --filter worker scrape:startupjobs
 pnpm --filter worker scrape:jobs
 pnpm --filter worker score:jobs
 ```
+
+The deterministic development fixture remains available as `pnpm --filter worker scrape:mock`.
 
 ## AI providers
 

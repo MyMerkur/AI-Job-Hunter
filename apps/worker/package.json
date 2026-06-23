@@ -16,6 +16,7 @@
     "playwright:install": "playwright install chromium",
     "scrape:startupjobs": "tsx src/index.ts scrape:startupjobs",
     "scrape:jobs": "tsx src/index.ts scrape:jobs",
+    "scrape:mock": "tsx src/index.ts scrape:mock",
     "score:jobs": "tsx src/index.ts score:jobs"
   },
   "dependencies": {
