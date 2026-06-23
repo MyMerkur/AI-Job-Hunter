@@ -6,6 +6,7 @@ import { env } from './config/env.js';
 import { isDatabaseConnected } from './db/connect.js';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
 import { requestLogger } from './middleware/request-logger.js';
+import { cvRouter } from './routes/cv.routes.js';
 
 export const app: Express = express();
 
@@ -22,6 +23,8 @@ app.get('/health', (_request, response) => {
   };
   response.status(database === 'connected' ? 200 : 503).json(payload);
 });
+
+app.use('/api/cv', cvRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

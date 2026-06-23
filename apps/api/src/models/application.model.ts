@@ -1,5 +1,7 @@
-import { Schema, model, models, type HydratedDocument, type Types } from 'mongoose';
+import mongoose, { type HydratedDocument, type Types } from 'mongoose';
 import type { ApplicationStatus } from '@ai-job-hunter/shared';
+
+const { Schema, model, models } = mongoose;
 
 export interface ApplicationDocument { jobId: Types.ObjectId; cvProfileId: Types.ObjectId; generatedCvId?: Types.ObjectId; status: ApplicationStatus; appliedAt?: Date; notes?: string; }
 export type ApplicationHydratedDocument = HydratedDocument<ApplicationDocument>;

@@ -1,5 +1,7 @@
-import { Schema, model, models, type HydratedDocument } from 'mongoose';
+import mongoose, { type HydratedDocument } from 'mongoose';
 import type { UserStatus } from '@ai-job-hunter/shared';
+
+const { Schema, model, models } = mongoose;
 
 export interface UserDocument { email: string; displayName?: string; status: UserStatus; }
 export type UserHydratedDocument = HydratedDocument<UserDocument>;

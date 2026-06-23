@@ -1,4 +1,6 @@
-import { Schema, model, models, type HydratedDocument, type Types } from 'mongoose';
+import mongoose, { type HydratedDocument, type Types } from 'mongoose';
+
+const { Schema, model, models } = mongoose;
 
 export interface ApplicationLogDocument { applicationId: Types.ObjectId; action: string; message: string; metadata?: Record<string, unknown>; createdAt: Date; }
 export type ApplicationLogHydratedDocument = HydratedDocument<ApplicationLogDocument>;

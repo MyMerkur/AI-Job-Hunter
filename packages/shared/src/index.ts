@@ -21,7 +21,8 @@ export interface User {
 
 export interface CVProfile {
   id: EntityId;
-  userId: EntityId;
+  /** Optional until authentication and profile ownership are introduced. */
+  userId?: EntityId;
   name: string;
   rawText?: string;
   summary?: string;

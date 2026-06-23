@@ -20,8 +20,15 @@ if (!Number.isInteger(parsedPort) || parsedPort < 1 || parsedPort > 65_535) {
   throw new Error('API_PORT must be a valid TCP port number.');
 }
 
+const parsedCvUploadMaxBytes = Number(process.env.CV_UPLOAD_MAX_BYTES ?? 10 * 1024 * 1024);
+if (!Number.isSafeInteger(parsedCvUploadMaxBytes) || parsedCvUploadMaxBytes < 1) {
+  throw new Error('CV_UPLOAD_MAX_BYTES must be a positive integer.');
+}
+
 export const env = {
   port: parsedPort,
   corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
   mongoUri: required('MONGODB_URI'),
+  cvUploadMaxBytes: parsedCvUploadMaxBytes,
+  cvUploadDirectory: resolve(currentDirectory, '../../../../uploads/cv'),
 };

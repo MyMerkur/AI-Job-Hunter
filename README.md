@@ -39,6 +39,18 @@ To run the worker in non-submitting inspection mode:
 pnpm --filter @ai-job-hunter/worker dev -- https://example.com
 ```
 
+## CV upload API
+
+Start MongoDB and the API, then submit one PDF or DOCX file (10 MB by default):
+
+```bash
+curl -X POST http://localhost:3001/api/cv/upload \
+  -F "file=@/absolute/path/to/cv.pdf" \
+  -F "name=My CV"
+```
+
+Files are stored locally in `uploads/cv`, which is intentionally ignored by Git. List and detail endpoints are `GET /api/cv` and `GET /api/cv/:id`.
+
 ## Deliberate gaps before product work
 
 - CV file storage and secure PDF/DOCX text extraction
