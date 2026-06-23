@@ -1,4 +1,4 @@
-import { AIOrchestrator, type RequestedProvider } from '@ai-job-hunter/ai';
+import { AIOrchestrator, SupervisorAgent, type ApplicationPreparationPipelineOutput, type RequestedProvider } from '@ai-job-hunter/ai';
 import { Router } from 'express';
 import type { Router as ExpressRouter } from 'express';
 import mongoose from 'mongoose';
@@ -34,34 +34,48 @@ applicationRouter.post('/prepare', async (request, response) => {
   if (!cvProfile.rawText?.trim()) throw new HttpError(422, 'CV profilinde analiz edilecek ham metin bulunamadı.');
 
   const providerInput = {
-    job: { title: job.title, company: job.company, description: job.description, location: job.location, remoteType: job.remoteType, languageRequirement: job.languageRequirement, url: job.url },
+    job: { title: job.title, company: job.company, source: job.source, description: job.description, location: job.location, remoteType: job.remoteType, languageRequirement: job.languageRequirement, url: job.url },
     cvRawText: cvProfile.rawText,
   };
-  const orchestrationRun = await new AIOrchestrator().runWithProvider(providerName as RequestedProvider, async (provider) => Promise.all([
-    provider.analyzeJob(providerInput),
-    provider.tailorCV(providerInput),
-    provider.generateCoverLetter(providerInput),
-  ]));
+  const requestedProvider = providerName as RequestedProvider;
+  const usePipeline = requestedProvider === 'auto' || requestedProvider === 'ollama';
+  const orchestrator = new AIOrchestrator();
+  const orchestrationRun = await orchestrator.runWithProvider(requestedProvider, async (provider) => {
+    if (usePipeline) return new SupervisorAgent().run(providerInput, provider);
+    const [analysis, tailoredCv, coverLetter] = await Promise.all([
+      provider.analyzeJob(providerInput), provider.tailorCV(providerInput), provider.generateCoverLetter(providerInput),
+    ]);
+    return { analysis, tailoredCvMarkdown: tailoredCv.content, coverLetterMarkdown: coverLetter.content, warnings: [], agentReports: [] };
+  });
   const orchestration = orchestrationRun.selection;
-  const [analysis, tailoredCv, coverLetter] = orchestrationRun.result;
+  const result = orchestrationRun.result;
+  const pipeline = usePipeline ? result as ApplicationPreparationPipelineOutput : undefined;
+  if (pipeline?.stopped) {
+    response.status(422).json({ error: 'Yüksek risk nedeniyle application preparation pipeline durduruldu.', pipeline: { ...pipeline, providerUsed: orchestration.resolvedProvider, warnings: [...orchestration.warnings, ...pipeline.warnings] } });
+    return;
+  }
+  const analysis = result.analysis;
+  const tailoredCvMarkdown = result.tailoredCvMarkdown;
+  const coverLetterMarkdown = result.coverLetterMarkdown;
+  const warnings = [...orchestration.warnings, ...result.warnings];
   const provider = orchestration.provider;
 
   const generatedCv = await GeneratedCVModel.create({
-    cvProfileId: cvProfile._id, jobId: job._id, content: tailoredCv.content, coverLetterContent: coverLetter.content,
+    cvProfileId: cvProfile._id, jobId: job._id, content: tailoredCvMarkdown, coverLetterContent: coverLetterMarkdown,
     provider: orchestration.resolvedProvider, format: 'markdown', status: 'ready',
   });
   const application = await ApplicationModel.create({
     jobId: job._id, cvProfileId: cvProfile._id, generatedCvId: generatedCv._id, status: 'prepared',
   });
-  const promptPaths = [analysis.promptPath, tailoredCv.promptPath, coverLetter.promptPath].filter((path): path is string => Boolean(path));
+  const promptPaths = [analysis.promptPath].filter((path): path is string => Boolean(path));
   await ApplicationLogModel.insertMany([
     { applicationId: application._id, action: 'job_analyzed', message: `Job ${provider.name} sağlayıcısıyla analiz edildi.`, metadata: { requestedProvider: orchestration.requestedProvider, provider: orchestration.resolvedProvider, score: analysis.score, decision: analysis.decision, isPlaceholder: analysis.isPlaceholder ?? false, promptPaths } },
-    { applicationId: application._id, action: 'cv_generated', message: 'Uyarlanmış CV markdown taslağı oluşturuldu.', metadata: { provider: orchestration.resolvedProvider, isPlaceholder: tailoredCv.isPlaceholder ?? false, promptPath: tailoredCv.promptPath } },
-    { applicationId: application._id, action: 'cover_letter_generated', message: 'Cover letter markdown taslağı oluşturuldu.', metadata: { provider: orchestration.resolvedProvider, isPlaceholder: coverLetter.isPlaceholder ?? false, promptPath: coverLetter.promptPath } },
-    { applicationId: application._id, action: 'application_prepared', message: 'Başvuru taslağı hazırlandı; hiçbir başvuru gönderilmedi.', metadata: { status: 'prepared', requestedProvider: orchestration.requestedProvider, resolvedProvider: orchestration.resolvedProvider, warnings: orchestration.warnings } },
+    { applicationId: application._id, action: 'cv_generated', message: 'Uyarlanmış CV markdown taslağı oluşturuldu.', metadata: { provider: orchestration.resolvedProvider } },
+    { applicationId: application._id, action: 'cover_letter_generated', message: 'Cover letter markdown taslağı oluşturuldu.', metadata: { provider: orchestration.resolvedProvider } },
+    { applicationId: application._id, action: 'application_prepared', message: 'Başvuru taslağı hazırlandı; hiçbir başvuru gönderilmedi.', metadata: { status: 'prepared', requestedProvider: orchestration.requestedProvider, resolvedProvider: orchestration.resolvedProvider, warnings, agentReports: pipeline?.agentReports ?? [] } },
   ]);
 
-  response.status(201).json({ application, generatedCv, analysis, provider: orchestration.resolvedProvider, warnings: orchestration.warnings });
+  response.status(201).json({ application, generatedCv, analysis, provider: orchestration.resolvedProvider, warnings, pipeline: pipeline ? { ...pipeline, providerUsed: orchestration.resolvedProvider, warnings } : undefined });
 });
 
 applicationRouter.get('/', async (_request, response) => {

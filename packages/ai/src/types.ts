@@ -4,6 +4,7 @@ import type { JobScoringResult } from '@ai-job-hunter/scoring';
 export interface AIJobInput {
   title: string;
   company?: string;
+  source?: string;
   description: string;
   location?: string;
   remoteType?: RemoteType;
@@ -52,4 +53,27 @@ export interface ProviderSelection {
   provider: AIProvider;
   warnings: string[];
   health: ProviderHealth[];
+}
+
+export type ApplicationDecision = 'apply' | 'review' | 'ignore';
+export type ApplicationAgentName = 'JobResearchAgent' | 'FitAnalysisAgent' | 'CVTailorAgent' | 'CoverLetterAgent' | 'DecisionAgent' | 'SupervisorAgent';
+
+export interface AgentReport {
+  agent: ApplicationAgentName;
+  status: 'completed' | 'skipped' | 'stopped';
+  summary: string;
+  data?: Record<string, unknown>;
+}
+
+export interface ApplicationPreparationPipelineOutput {
+  providerUsed: ResolvedProvider;
+  decision: ApplicationDecision;
+  score: number;
+  risks: string[];
+  warnings: string[];
+  tailoredCvMarkdown: string;
+  coverLetterMarkdown: string;
+  agentReports: AgentReport[];
+  stopped: boolean;
+  analysis: AIJobAnalysis;
 }

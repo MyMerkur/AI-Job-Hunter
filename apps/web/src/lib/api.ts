@@ -117,11 +117,19 @@ export interface ApplicationPreparation {
   analysis: { score: number; decision: 'apply' | 'maybe' | 'ignore'; positiveSignals: string[]; negativeSignals: string[]; risks: string[]; provider: string; manualPrompt?: string; promptPath?: string };
   provider: Exclude<PreparationProvider, 'auto'>;
   warnings: string[];
+  pipeline?: {
+    providerUsed: Exclude<PreparationProvider, 'auto'>;
+    decision: 'apply' | 'review' | 'ignore';
+    score: number;
+    risks: string[];
+    warnings: string[];
+    agentReports: Array<{ agent: string; status: 'completed' | 'skipped' | 'stopped'; summary: string }>;
+  };
 }
 
 export async function prepareApplication(input: { jobId: string; cvProfileId: string; provider: PreparationProvider }): Promise<ApplicationPreparation> {
   const response = await fetch(`${apiBaseUrl}/api/applications/prepare`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) });
-  const payload = await response.json() as { application?: ApiApplication; generatedCv?: ApiGeneratedCV; analysis?: ApplicationPreparation['analysis']; provider?: ApplicationPreparation['provider']; warnings?: string[]; error?: string };
+  const payload = await response.json() as { application?: ApiApplication; generatedCv?: ApiGeneratedCV; analysis?: ApplicationPreparation['analysis']; provider?: ApplicationPreparation['provider']; warnings?: string[]; pipeline?: ApplicationPreparation['pipeline']; error?: string };
   if (!response.ok || !payload.application || !payload.generatedCv || !payload.analysis || !payload.provider) throw new Error(payload.error ?? `Başvuru taslağı hazırlanamadı: ${response.status}`);
-  return { application: normalizeApplication(payload.application), generatedCv: normalizeGeneratedCV(payload.generatedCv), analysis: payload.analysis, provider: payload.provider, warnings: payload.warnings ?? [] };
+  return { application: normalizeApplication(payload.application), generatedCv: normalizeGeneratedCV(payload.generatedCv), analysis: payload.analysis, provider: payload.provider, warnings: payload.warnings ?? [], pipeline: payload.pipeline };
 }
