@@ -110,16 +110,18 @@ export async function updateApplicationStatus(id: string, status: ApplicationSta
   return normalizeApplication(payload.application);
 }
 
-export type PreparationProvider = 'rule_based' | 'manual_chatgpt' | 'ollama';
+export type PreparationProvider = 'auto' | 'rule_based' | 'manual_chatgpt' | 'ollama';
 export interface ApplicationPreparation {
   application: Application;
   generatedCv: GeneratedCV;
   analysis: { score: number; decision: 'apply' | 'maybe' | 'ignore'; positiveSignals: string[]; negativeSignals: string[]; risks: string[]; provider: string; manualPrompt?: string; promptPath?: string };
+  provider: Exclude<PreparationProvider, 'auto'>;
+  warnings: string[];
 }
 
 export async function prepareApplication(input: { jobId: string; cvProfileId: string; provider: PreparationProvider }): Promise<ApplicationPreparation> {
   const response = await fetch(`${apiBaseUrl}/api/applications/prepare`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) });
-  const payload = await response.json() as { application?: ApiApplication; generatedCv?: ApiGeneratedCV; analysis?: ApplicationPreparation['analysis']; error?: string };
-  if (!response.ok || !payload.application || !payload.generatedCv || !payload.analysis) throw new Error(payload.error ?? `Başvuru taslağı hazırlanamadı: ${response.status}`);
-  return { application: normalizeApplication(payload.application), generatedCv: normalizeGeneratedCV(payload.generatedCv), analysis: payload.analysis };
+  const payload = await response.json() as { application?: ApiApplication; generatedCv?: ApiGeneratedCV; analysis?: ApplicationPreparation['analysis']; provider?: ApplicationPreparation['provider']; warnings?: string[]; error?: string };
+  if (!response.ok || !payload.application || !payload.generatedCv || !payload.analysis || !payload.provider) throw new Error(payload.error ?? `Başvuru taslağı hazırlanamadı: ${response.status}`);
+  return { application: normalizeApplication(payload.application), generatedCv: normalizeGeneratedCV(payload.generatedCv), analysis: payload.analysis, provider: payload.provider, warnings: payload.warnings ?? [] };
 }

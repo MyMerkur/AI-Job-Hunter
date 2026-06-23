@@ -5,6 +5,7 @@ import { getCvProfiles, getJob, prepareApplication, type ApplicationPreparation,
 import { labelForStatus } from './JobsPage.js';
 
 const providers: Array<{ value: PreparationProvider; label: string; description: string }> = [
+  { value: 'auto', label: 'Auto (önerilen)', description: 'Ollama kullanılabiliyorsa onu seçer; değilse Rule based sağlayıcıya düşer.' },
   { value: 'rule_based', label: 'Rule based', description: 'Ücretsiz, yerel şablon ve kurallarla taslak üretir.' },
   { value: 'manual_chatgpt', label: 'Manual ChatGPT', description: 'ChatGPT web arayüzüne yapıştırmanız için prompt üretir.' },
   { value: 'ollama', label: 'Ollama', description: 'Yerel Ollama entegrasyonu için güvenli placeholder.' },
@@ -13,7 +14,7 @@ const providers: Array<{ value: PreparationProvider; label: string; description:
 export function JobDetailPage() {
   const { jobId } = useParams();
   const [job, setJob] = useState<Job>(); const [profiles, setProfiles] = useState<CVProfile[]>([]);
-  const [cvProfileId, setCvProfileId] = useState(''); const [provider, setProvider] = useState<PreparationProvider>('rule_based');
+  const [cvProfileId, setCvProfileId] = useState(''); const [provider, setProvider] = useState<PreparationProvider>('auto');
   const [preparation, setPreparation] = useState<ApplicationPreparation>(); const [isPreparing, setIsPreparing] = useState(false);
   const [error, setError] = useState<string>(); const [isLoading, setIsLoading] = useState(true);
 
@@ -52,7 +53,7 @@ function PreparedApplication({ preparation }: { preparation: ApplicationPreparat
   const isManual = preparation.generatedCv.provider === 'manual_chatgpt';
   const prompt = preparation.analysis.manualPrompt ?? `CV prompt:\n${preparation.generatedCv.content}\n\nCover letter prompt:\n${preparation.generatedCv.coverLetterContent}`;
   async function copyPrompt() { try { await navigator.clipboard.writeText(prompt); setCopied(true); } catch { setCopied(false); } }
-  return <section><p className="section-label">TASLAK HAZIR</p><h2>Application durumu: {preparation.application.status}</h2><div className="job-tags"><span className="badge">{preparation.analysis.score} puan</span><span className="badge">{preparation.analysis.decision}</span><span className="badge">{preparation.analysis.provider}</span></div>{isManual && <><button className="copy-button" onClick={() => void copyPrompt()}>{copied ? 'ChatGPT promptu kopyalandı' : 'ChatGPT promptunu kopyala'}</button><pre className="raw-text-preview">{prompt}</pre></>}<h3>Uyarlanmış CV (Markdown)</h3><pre className="raw-text-preview">{preparation.generatedCv.content}</pre><h3>Cover letter (Markdown)</h3><pre className="raw-text-preview">{preparation.generatedCv.coverLetterContent}</pre><p className="muted">Taslak Applications sayfasına kaydedildi. Göndermeden önce içeriği manuel inceleyin.</p></section>;
+  return <section><p className="section-label">TASLAK HAZIR</p><h2>Application durumu: {preparation.application.status}</h2><div className="job-tags"><span className="badge">{preparation.analysis.score} puan</span><span className="badge">{preparation.analysis.decision}</span><span className="badge">Kullanılan: {preparation.provider}</span></div>{preparation.warnings.map((warning) => <p key={warning} className="provider-warning">{warning}</p>)}{isManual && <><button className="copy-button" onClick={() => void copyPrompt()}>{copied ? 'ChatGPT promptu kopyalandı' : 'ChatGPT promptunu kopyala'}</button><pre className="raw-text-preview">{prompt}</pre></>}<h3>Uyarlanmış CV (Markdown)</h3><pre className="raw-text-preview">{preparation.generatedCv.content}</pre><h3>Cover letter (Markdown)</h3><pre className="raw-text-preview">{preparation.generatedCv.coverLetterContent}</pre><p className="muted">Taslak Applications sayfasına kaydedildi. Göndermeden önce içeriği manuel inceleyin.</p></section>;
 }
 
 function SignalList({ title, values, empty }: { title: string; values?: string[]; empty: string }) { return <div className="signal-group"><h3>{title}</h3>{values?.length ? <ul>{values.map((value) => <li key={value}>{value}</li>)}</ul> : <p className="muted">{empty}</p>}</div>; }

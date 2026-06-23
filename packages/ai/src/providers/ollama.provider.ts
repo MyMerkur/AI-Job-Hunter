@@ -1,4 +1,4 @@
-import type { AIJobAnalysis, AIGeneratedText, AIProvider, AnalyzeJobInput, GenerateCoverLetterInput, TailorCVInput } from '../types.js';
+import type { AIJobAnalysis, AIGeneratedText, AIProvider, AnalyzeJobInput, GenerateCoverLetterInput, ProviderHealth, TailorCVInput } from '../types.js';
 import { RuleBasedAIProvider } from './rule-based.provider.js';
 
 type OllamaGenerateResponse = { response?: string; error?: string };
@@ -54,6 +54,34 @@ export class OllamaProvider implements AIProvider {
 
   private get generateUrl(): string {
     return `${this.baseUrl.endsWith('/api') ? this.baseUrl : `${this.baseUrl}/api`}/generate`;
+  }
+
+  private get tagsUrl(): string {
+    return `${this.baseUrl.endsWith('/api') ? this.baseUrl : `${this.baseUrl}/api`}/tags`;
+  }
+
+  async healthCheck(): Promise<ProviderHealth> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), Math.min(this.timeoutMs, 10_000));
+    try {
+      const response = await fetch(this.tagsUrl, { signal: controller.signal });
+      if (!response.ok) return { provider: 'ollama', available: false, message: `Ollama model listesi HTTP ${response.status} döndürdü.` };
+      const body: unknown = await response.json();
+      const models = body && typeof body === 'object' && Array.isArray((body as { models?: unknown }).models) ? (body as { models: unknown[] }).models : [];
+      const configuredModelExists = models.some((entry) => {
+        if (!entry || typeof entry !== 'object') return false;
+        const model = entry as { name?: unknown; model?: unknown };
+        return model.name === this.model || model.model === this.model;
+      });
+      return configuredModelExists
+        ? { provider: 'ollama', available: true, message: `Ollama ve ${this.model} kullanılabilir.` }
+        : { provider: 'ollama', available: false, message: `Ollama çalışıyor fakat ${this.model} modeli bulunamadı. "ollama pull ${this.model}" çalıştırın.` };
+    } catch (error) {
+      const message = error instanceof Error && error.name === 'AbortError' ? 'Ollama sağlık kontrolü zaman aşımına uğradı.' : `Ollama'ya bağlanılamadı (${this.tagsUrl}).`;
+      return { provider: 'ollama', available: false, message };
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 
   private async generate(prompt: string, json = false): Promise<string> {

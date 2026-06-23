@@ -64,7 +64,7 @@ Set `APPLY_ASSISTANT_HEADLESS=true` only for diagnostic runs; a headless run clo
 
 ## AI providers
 
-`packages/ai` has no paid API dependency. `RuleBasedAIProvider` produces deterministic drafts. `OllamaProvider` calls the local `/api/generate` endpoint using `OLLAMA_BASE_URL` and `OLLAMA_MODEL`; it returns a clear 503 error if Ollama or the selected model is unavailable. `ManualChatGPTProvider` saves copyable prompts in `generated/prompts` (Git-ignored). ChatGPT Plus does not provide backend API access; use the manual provider to paste prompts into ChatGPT’s web interface.
+`packages/ai` has no paid API dependency. `provider=auto` first checks whether Ollama is reachable and whether `OLLAMA_MODEL` is installed; it uses Ollama when available and otherwise falls back to `RuleBasedAIProvider` with a warning. `RuleBasedAIProvider` produces deterministic drafts. `OllamaProvider` calls the local `/api/generate` endpoint using `OLLAMA_BASE_URL` and `OLLAMA_MODEL`; it returns a clear 503 error if Ollama or the selected model is unavailable. `ManualChatGPTProvider` is selected only explicitly and saves copyable prompts in `generated/prompts` (Git-ignored). ChatGPT Plus does not provide backend API access; use the manual provider to paste prompts into ChatGPT’s web interface.
 
 ## CV upload API
 

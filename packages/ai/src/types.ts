@@ -36,3 +36,20 @@ export interface AIProvider {
   tailorCV(input: TailorCVInput): Promise<AIGeneratedText>;
   generateCoverLetter(input: GenerateCoverLetterInput): Promise<AIGeneratedText>;
 }
+
+export type RequestedProvider = 'auto' | 'rule_based' | 'manual_chatgpt' | 'ollama';
+export type ResolvedProvider = Exclude<RequestedProvider, 'auto'>;
+
+export interface ProviderHealth {
+  provider: ResolvedProvider;
+  available: boolean;
+  message: string;
+}
+
+export interface ProviderSelection {
+  requestedProvider: RequestedProvider;
+  resolvedProvider: ResolvedProvider;
+  provider: AIProvider;
+  warnings: string[];
+  health: ProviderHealth[];
+}
