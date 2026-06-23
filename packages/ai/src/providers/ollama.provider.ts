@@ -109,6 +109,10 @@ export class OllamaProvider implements AIProvider {
     }
   }
 
+  async testConnection(): Promise<string> {
+    return this.generate('Reply with exactly: AI connection successful. Do not add anything else.');
+  }
+
   async analyzeJob(input: AnalyzeJobInput): Promise<AIJobAnalysis> {
     const prompt = [
       'Analyze the job against the CV. Return JSON only, with exactly these fields:',

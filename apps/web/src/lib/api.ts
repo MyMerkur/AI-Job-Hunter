@@ -111,6 +111,8 @@ export async function updateApplicationStatus(id: string, status: ApplicationSta
 }
 
 export type PreparationProvider = 'auto' | 'rule_based' | 'manual_chatgpt' | 'ollama';
+export interface AIProviderHealth { provider: Exclude<PreparationProvider, 'auto'>; available: boolean; message: string; }
+export interface AIHealthResponse { requestedProvider: PreparationProvider; providerUsed: Exclude<PreparationProvider, 'auto'>; fallbackActive: boolean; warnings: string[]; health: AIProviderHealth[]; }
 export interface ApplicationPreparation {
   application: Application;
   generatedCv: GeneratedCV;
@@ -127,7 +129,22 @@ export interface ApplicationPreparation {
   };
 }
 
-export async function prepareApplication(input: { jobId: string; cvProfileId: string; provider: PreparationProvider }): Promise<ApplicationPreparation> {
+export async function getAIHealth(input: { provider: PreparationProvider; ollamaBaseUrl: string; ollamaModel: string }): Promise<AIHealthResponse> {
+  const query = new URLSearchParams({ provider: input.provider, ollamaBaseUrl: input.ollamaBaseUrl, ollamaModel: input.ollamaModel });
+  const response = await fetch(`${apiBaseUrl}/api/ai/health?${query}`);
+  const payload = await response.json() as AIHealthResponse & { error?: string };
+  if (!response.ok) throw new Error(payload.error ?? `AI sağlık durumu alınamadı: ${response.status}`);
+  return payload;
+}
+
+export async function testAIConnection(input: { provider: PreparationProvider; ollamaBaseUrl: string; ollamaModel: string }): Promise<{ providerUsed: Exclude<PreparationProvider, 'auto'>; fallbackActive: boolean; warnings: string[]; result: string }> {
+  const response = await fetch(`${apiBaseUrl}/api/ai/test`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) });
+  const payload = await response.json() as { providerUsed?: Exclude<PreparationProvider, 'auto'>; fallbackActive?: boolean; warnings?: string[]; result?: string; error?: string };
+  if (!response.ok || !payload.providerUsed || typeof payload.result !== 'string') throw new Error(payload.error ?? `AI bağlantı testi başarısız: ${response.status}`);
+  return { providerUsed: payload.providerUsed, fallbackActive: payload.fallbackActive ?? false, warnings: payload.warnings ?? [], result: payload.result };
+}
+
+export async function prepareApplication(input: { jobId: string; cvProfileId: string; provider: PreparationProvider; ollamaBaseUrl?: string; ollamaModel?: string }): Promise<ApplicationPreparation> {
   const response = await fetch(`${apiBaseUrl}/api/applications/prepare`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) });
   const payload = await response.json() as { application?: ApiApplication; generatedCv?: ApiGeneratedCV; analysis?: ApplicationPreparation['analysis']; provider?: ApplicationPreparation['provider']; warnings?: string[]; pipeline?: ApplicationPreparation['pipeline']; error?: string };
   if (!response.ok || !payload.application || !payload.generatedCv || !payload.analysis || !payload.provider) throw new Error(payload.error ?? `Başvuru taslağı hazırlanamadı: ${response.status}`);

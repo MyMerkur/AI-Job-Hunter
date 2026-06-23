@@ -9,6 +9,7 @@ import { requestLogger } from './middleware/request-logger.js';
 import { cvRouter } from './routes/cv.routes.js';
 import { jobRouter } from './routes/job.routes.js';
 import { applicationRouter } from './routes/application.routes.js';
+import { aiRouter } from './routes/ai.routes.js';
 
 export const app: Express = express();
 
@@ -29,6 +30,7 @@ app.get('/health', (_request, response) => {
 app.use('/api/cv', cvRouter);
 app.use('/api/jobs', jobRouter);
 app.use('/api/applications', applicationRouter);
+app.use('/api/ai', aiRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

@@ -1,4 +1,4 @@
-import { AIOrchestrator, SupervisorAgent, type ApplicationPreparationPipelineOutput, type RequestedProvider } from '@ai-job-hunter/ai';
+import { AIOrchestrator, OllamaProvider, SupervisorAgent, type ApplicationPreparationPipelineOutput, type RequestedProvider } from '@ai-job-hunter/ai';
 import { Router } from 'express';
 import type { Router as ExpressRouter } from 'express';
 import mongoose from 'mongoose';
@@ -9,6 +9,7 @@ import { ApplicationModel } from '../models/application.model.js';
 import { CVProfileModel } from '../models/cv-profile.model.js';
 import { GeneratedCVModel } from '../models/generated-cv.model.js';
 import { JobModel } from '../models/job.model.js';
+import { parseOllamaConfig } from '../services/ollama-config.js';
 
 const providerNames: RequestedProvider[] = ['auto', 'rule_based', 'manual_chatgpt', 'ollama'];
 const editableStatuses: ApplicationStatus[] = ['prepared', 'reviewed', 'applied', 'rejected', 'failed'];
@@ -39,7 +40,8 @@ applicationRouter.post('/prepare', async (request, response) => {
   };
   const requestedProvider = providerName as RequestedProvider;
   const usePipeline = requestedProvider === 'auto' || requestedProvider === 'ollama';
-  const orchestrator = new AIOrchestrator();
+  const ollamaConfig = parseOllamaConfig({ baseUrl: request.body?.ollamaBaseUrl, model: request.body?.ollamaModel });
+  const orchestrator = new AIOrchestrator(new OllamaProvider(ollamaConfig.baseUrl, ollamaConfig.model));
   const orchestrationRun = await orchestrator.runWithProvider(requestedProvider, async (provider) => {
     if (usePipeline) return new SupervisorAgent().run(providerInput, provider);
     const [analysis, tailoredCv, coverLetter] = await Promise.all([

@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import type { CVProfile, Job } from '@ai-job-hunter/shared';
 import { getCvProfiles, getJob, prepareApplication, type ApplicationPreparation, type PreparationProvider } from '../lib/api.js';
+import { getAISettings } from '../lib/ai-settings.js';
 import { labelForStatus } from './JobsPage.js';
 
 const providers: Array<{ value: PreparationProvider; label: string; description: string }> = [
@@ -14,7 +15,7 @@ const providers: Array<{ value: PreparationProvider; label: string; description:
 export function JobDetailPage() {
   const { jobId } = useParams();
   const [job, setJob] = useState<Job>(); const [profiles, setProfiles] = useState<CVProfile[]>([]);
-  const [cvProfileId, setCvProfileId] = useState(''); const [provider, setProvider] = useState<PreparationProvider>('auto');
+  const [cvProfileId, setCvProfileId] = useState(''); const [provider, setProvider] = useState<PreparationProvider>(() => getAISettings().provider);
   const [preparation, setPreparation] = useState<ApplicationPreparation>(); const [isPreparing, setIsPreparing] = useState(false);
   const [error, setError] = useState<string>(); const [isLoading, setIsLoading] = useState(true);
 
@@ -30,7 +31,7 @@ export function JobDetailPage() {
     event.preventDefault();
     if (!job || !cvProfileId) return;
     setIsPreparing(true); setError(undefined); setPreparation(undefined);
-    try { setPreparation(await prepareApplication({ jobId: job.id, cvProfileId, provider })); }
+    try { const settings = getAISettings(); setPreparation(await prepareApplication({ jobId: job.id, cvProfileId, provider, ollamaBaseUrl: settings.ollamaBaseUrl, ollamaModel: settings.ollamaModel })); }
     catch (cause) { setError(cause instanceof Error ? cause.message : 'Başvuru taslağı hazırlanamadı.'); }
     finally { setIsPreparing(false); }
   }
