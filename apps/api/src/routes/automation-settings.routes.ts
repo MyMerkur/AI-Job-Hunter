@@ -29,6 +29,7 @@ automationSettingsRouter.put('/', async (request, response) => {
     autoAnalyzeJobs: asBoolean(body.autoAnalyzeJobs, 'autoAnalyzeJobs'), autoPrepareApplications: asBoolean(body.autoPrepareApplications, 'autoPrepareApplications'),
     minScoreToPrepare: asScore(body.minScoreToPrepare, 'minScoreToPrepare'), minScoreToAssistant: asScore(body.minScoreToAssistant, 'minScoreToAssistant'),
     requireHumanReviewBeforeSubmit: true,
+    autoSubmitEnabled: false,
     blockedKeywords: asKeywords(body.blockedKeywords, 'blockedKeywords'), preferredKeywords: asKeywords(body.preferredKeywords, 'preferredKeywords'),
   };
   const updated = await AutomationSettingsModel.findOneAndUpdate({ key: 'default' }, { $set: update, $setOnInsert: { key: 'default' } }, { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true });

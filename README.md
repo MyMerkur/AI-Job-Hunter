@@ -62,6 +62,12 @@ pnpm --filter worker assist:application APPLICATION_ID
 
 Set `APPLY_ASSISTANT_HEADLESS=true` only for diagnostic runs; a headless run closes after filling and still never submits.
 
+### Auto-submit safety guard
+
+`autoSubmitEnabled` exists only as a future-facing persisted setting and defaults to `false`. It is deliberately not exposed as a UI control, and the settings API always writes it as `false`. The Playwright assistant may detect a final submit button, but records `submit_button_detected` and `submit_blocked_by_safety_guard` logs instead of clicking it. There is no submit-click implementation in this project.
+
+This is intentional: job applications can create legal, privacy, employment, and reputational consequences. A human must review every completed form, handle any login or CAPTCHA, and make the final submission themselves.
+
 ## AI providers
 
 `packages/ai` has no paid API dependency. `provider=auto` first checks whether Ollama is reachable and whether `OLLAMA_MODEL` is installed; it uses Ollama when available and otherwise falls back to `RuleBasedAIProvider` with a warning. `RuleBasedAIProvider` produces deterministic drafts. `OllamaProvider` calls the local `/api/generate` endpoint using `OLLAMA_BASE_URL` and `OLLAMA_MODEL`; it returns a clear 503 error if Ollama or the selected model is unavailable. `ManualChatGPTProvider` is selected only explicitly and saves copyable prompts in `generated/prompts` (Git-ignored). ChatGPT Plus does not provide backend API access; use the manual provider to paste prompts into ChatGPT’s web interface.

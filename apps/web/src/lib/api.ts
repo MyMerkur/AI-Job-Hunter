@@ -145,7 +145,7 @@ export async function getAutomationSettings(): Promise<AutomationSettings> {
   return payload.settings;
 }
 
-export async function updateAutomationSettings(settings: Omit<AutomationSettings, 'updatedAt' | 'requireHumanReviewBeforeSubmit'>): Promise<AutomationSettings> {
+export async function updateAutomationSettings(settings: Omit<AutomationSettings, 'updatedAt' | 'requireHumanReviewBeforeSubmit' | 'autoSubmitEnabled'>): Promise<AutomationSettings> {
   const response = await fetch(`${apiBaseUrl}/api/settings/automation`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settings) });
   const payload = await response.json() as { settings?: AutomationSettings; error?: string };
   if (!response.ok || !payload.settings) throw new Error(payload.error ?? `Otomasyon ayarları kaydedilemedi: ${response.status}`);

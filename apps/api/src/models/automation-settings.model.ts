@@ -8,6 +8,7 @@ export const automationSettingsDefaults = {
   minScoreToPrepare: 70,
   minScoreToAssistant: 85,
   requireHumanReviewBeforeSubmit: true as const,
+  autoSubmitEnabled: false,
   blockedKeywords: ['senior', 'native czech', '5+ years'],
   preferredKeywords: ['react', 'node.js', 'typescript', 'junior', 'internship', 'part-time'],
 };
@@ -22,6 +23,7 @@ const schema = new Schema<AutomationSettingsDocument>({
   minScoreToPrepare: { type: Number, default: automationSettingsDefaults.minScoreToPrepare, min: 0, max: 100, required: true },
   minScoreToAssistant: { type: Number, default: automationSettingsDefaults.minScoreToAssistant, min: 0, max: 100, required: true },
   requireHumanReviewBeforeSubmit: { type: Boolean, default: true, required: true },
+  autoSubmitEnabled: { type: Boolean, default: false, required: true },
   blockedKeywords: { type: [String], default: automationSettingsDefaults.blockedKeywords },
   preferredKeywords: { type: [String], default: automationSettingsDefaults.preferredKeywords },
 }, { timestamps: true, collection: 'automationsettings' });

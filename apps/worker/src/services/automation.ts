@@ -8,7 +8,7 @@ import { assistApplication } from './application-assistant.js';
 
 const defaults: WorkerAutomationSettingsDocument = {
   key: 'default', autoAnalyzeJobs: true, autoPrepareApplications: false, minScoreToPrepare: 70, minScoreToAssistant: 85,
-  requireHumanReviewBeforeSubmit: true, blockedKeywords: ['senior', 'native czech', '5+ years'], preferredKeywords: ['react', 'node.js', 'typescript', 'junior', 'internship', 'part-time'],
+  requireHumanReviewBeforeSubmit: true, autoSubmitEnabled: false, blockedKeywords: ['senior', 'native czech', '5+ years'], preferredKeywords: ['react', 'node.js', 'typescript', 'junior', 'internship', 'part-time'],
 };
 
 async function getSettings(): Promise<WorkerAutomationSettingsDocument> {

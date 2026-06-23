@@ -7,6 +7,7 @@ import { WorkerApplicationModel } from '../models/application.model.js';
 import { WorkerCVProfileModel } from '../models/cv-profile.model.js';
 import { WorkerGeneratedCVModel } from '../models/generated-cv.model.js';
 import { WorkerJobModel } from '../models/job.model.js';
+import { WorkerAutomationSettingsModel } from '../models/automation-settings.model.js';
 
 type Contact = { name?: string; email?: string; phone?: string };
 
@@ -37,6 +38,16 @@ function isChallenge(text: string): boolean { return /captcha|verify you are hum
 async function findApplyButton(page: Page) {
   const button = page.locator('a, button').filter({ hasText: /apply|application|přihlásit|odpovědět|reagovat/i }).first();
   return await button.count() > 0 && await button.isVisible().catch(() => false) ? button : undefined;
+}
+
+async function findSubmitButton(page: Page) {
+  const button = page.locator('button[type="submit"], input[type="submit"], button').filter({ hasText: /submit|send|apply now|apply|přihlásit|odeslat|potvrdit/i }).last();
+  return await button.count() > 0 && await button.isVisible().catch(() => false) ? button : undefined;
+}
+
+async function autoSubmitEnabled(): Promise<boolean> {
+  const settings = await WorkerAutomationSettingsModel.findOne({ key: 'default' }).select('autoSubmitEnabled').lean();
+  return settings?.autoSubmitEnabled === true;
 }
 
 /** Fills a public form but deliberately never clicks any submit/send button. */
@@ -90,6 +101,17 @@ export async function assistApplication(applicationId: string): Promise<void> {
       }
     } else {
       await log(application._id, 'file_upload_skipped', 'Yüklenecek oluşturulmuş CV dosyası bulunamadı; markdown taslağı dosya yerine kullanılamaz.');
+    }
+
+    const submitButton = await findSubmitButton(page);
+    if (submitButton) {
+      await log(application._id, 'submit_button_detected', 'Final submit düğmesi algılandı; tıklanmadı.');
+      // Future auto-submit must pass this explicit guard. There is deliberately no click branch in this MVP.
+      if (await autoSubmitEnabled() !== true) {
+        await log(application._id, 'submit_blocked_by_safety_guard', 'autoSubmitEnabled true olmadığı için final submit düğmesine tıklanması engellendi.');
+      } else {
+        await log(application._id, 'submit_blocked_by_safety_guard', 'Auto-submit mimarisi henüz uygulanmadığı için final submit düğmesine tıklanmadı.');
+      }
     }
 
     await log(application._id, 'stopped_before_submit', 'Form doldurma yardımı tamamlandı. Submit düğmesine tıklanmadı.');

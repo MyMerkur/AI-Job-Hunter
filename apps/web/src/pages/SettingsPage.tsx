@@ -9,7 +9,7 @@ const providerOptions: Array<{ value: PreparationProvider; label: string }> = [
   { value: 'rule_based', label: 'Rule based' },
   { value: 'manual_chatgpt', label: 'Manual ChatGPT' },
 ];
-const defaultAutomationSettings: AutomationSettings = { autoAnalyzeJobs: true, autoPrepareApplications: false, minScoreToPrepare: 70, minScoreToAssistant: 85, requireHumanReviewBeforeSubmit: true, blockedKeywords: ['senior', 'native czech', '5+ years'], preferredKeywords: ['react', 'node.js', 'typescript', 'junior', 'internship', 'part-time'], updatedAt: '' };
+const defaultAutomationSettings: AutomationSettings = { autoAnalyzeJobs: true, autoPrepareApplications: false, minScoreToPrepare: 70, minScoreToAssistant: 85, requireHumanReviewBeforeSubmit: true, autoSubmitEnabled: false, blockedKeywords: ['senior', 'native czech', '5+ years'], preferredKeywords: ['react', 'node.js', 'typescript', 'junior', 'internship', 'part-time'], updatedAt: '' };
 const keywordsToText = (keywords: string[]) => keywords.join(', ');
 const textToKeywords = (value: string) => [...new Set(value.split(',').map((keyword) => keyword.trim().toLowerCase()).filter(Boolean))];
 
@@ -51,7 +51,7 @@ export function SettingsPage() {
   async function saveAutomation(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setIsSavingAutomation(true); setAutomationError(undefined);
     try {
-      const { updatedAt: _updatedAt, requireHumanReviewBeforeSubmit: _review, ...payload } = automation;
+      const { updatedAt: _updatedAt, requireHumanReviewBeforeSubmit: _review, autoSubmitEnabled: _autoSubmit, ...payload } = automation;
       setAutomation(await updateAutomationSettings(payload));
     } catch (cause) { setAutomationError(cause instanceof Error ? cause.message : 'Otomasyon ayarları kaydedilemedi.'); }
     finally { setIsSavingAutomation(false); }

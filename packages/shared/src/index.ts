@@ -147,6 +147,7 @@ export interface AutomationSettings {
   minScoreToPrepare: number;
   minScoreToAssistant: number;
   requireHumanReviewBeforeSubmit: true;
+  autoSubmitEnabled: boolean;
   blockedKeywords: string[];
   preferredKeywords: string[];
   updatedAt: ISODateString;
