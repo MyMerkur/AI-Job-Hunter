@@ -4,7 +4,8 @@ export type ISODateString = string;
 
 export type UserStatus = 'active' | 'disabled';
 export type CvProfileStatus = 'draft' | 'ready' | 'archived';
-export type JobStatus = 'discovered' | 'analyzed' | 'saved' | 'dismissed' | 'applied';
+export type JobStatus = 'new' | 'saved' | 'ignored' | 'ready_to_apply' | 'applied' | 'failed';
+export type JobDecision = 'apply' | 'maybe' | 'ignore';
 export type JobAnalysisStatus = 'pending' | 'completed' | 'failed';
 export type GeneratedCvStatus = 'draft' | 'ready' | 'archived';
 export type ApplicationStatus = 'draft' | 'ready_for_review' | 'submitted' | 'withdrawn' | 'rejected' | 'interviewing' | 'offer';
@@ -60,6 +61,7 @@ export interface Job {
   remoteType: RemoteType;
   languageRequirement: LanguageRequirement[];
   score?: number;
+  decision?: JobDecision;
   status: JobStatus;
   createdAt: ISODateString;
   updatedAt: ISODateString;

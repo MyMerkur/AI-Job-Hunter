@@ -62,6 +62,10 @@ curl -X POST http://localhost:3001/api/cv/upload \
 
 Files are stored locally in `uploads/cv`, which is intentionally ignored by Git. List and detail endpoints are `GET /api/cv` and `GET /api/cv/:id`.
 
+## Jobs API
+
+`GET /api/jobs` returns jobs ordered by `score` descending then `createdAt` descending. Optional query filters are `source`, `status`, `minScore`, and `decision`. Update a workflow status with `PATCH /api/jobs/:id/status` and a JSON body such as `{ "status": "saved" }`.
+
 ## Deliberate gaps before product work
 
 - CV file storage and secure PDF/DOCX text extraction

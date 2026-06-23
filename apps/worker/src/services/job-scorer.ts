@@ -4,6 +4,12 @@ import { WorkerJobModel, type WorkerJobHydratedDocument } from '../models/job.mo
 
 const fallbackCvText = 'Computer science student with React, Node.js, TypeScript, JavaScript, MongoDB, Express and English skills.';
 
+function statusForDecision(decision: 'apply' | 'maybe' | 'ignore') {
+  if (decision === 'apply') return 'ready_to_apply';
+  if (decision === 'ignore') return 'ignored';
+  return 'new';
+}
+
 async function getCvRawText(): Promise<string> {
   const latestProfile = await WorkerCVProfileModel.findOne({ rawText: { $type: 'string', $ne: '' } }).sort({ createdAt: -1 });
   if (latestProfile?.rawText) return latestProfile.rawText;
@@ -19,7 +25,7 @@ export async function scoreJobs(jobs?: WorkerJobHydratedDocument[]): Promise<voi
       title: job.title, description: job.description, location: job.location,
       languageRequirement: job.languageRequirement, remoteType: job.remoteType, cvRawText,
     });
-    await WorkerJobModel.updateOne({ _id: job._id }, { $set: { score: result.score, status: 'analyzed' } });
+    await WorkerJobModel.updateOne({ _id: job._id }, { $set: { score: result.score, decision: result.decision, status: statusForDecision(result.decision) } });
     console.log(`${job.title}: ${result.score}/100 (${result.decision})`);
   }
   console.log(`Scored ${records.length} job records.`);

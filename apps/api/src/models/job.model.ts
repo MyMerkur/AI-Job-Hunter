@@ -1,9 +1,9 @@
 import mongoose, { type HydratedDocument, type Types } from 'mongoose';
-import type { JobStatus, RemoteType } from '@ai-job-hunter/shared';
+import type { JobDecision, JobStatus, RemoteType } from '@ai-job-hunter/shared';
 
 const { Schema, model, models } = mongoose;
 
-export interface JobDocument { userId?: Types.ObjectId; title: string; company: string; location?: string; url: string; source: string; description: string; salary?: { min?: number; max?: number; currency?: string; period?: string; text?: string }; remoteType: RemoteType; languageRequirement: { language: string; level?: string; required?: boolean }[]; score?: number; status: JobStatus; }
+export interface JobDocument { userId?: Types.ObjectId; title: string; company: string; location?: string; url: string; source: string; description: string; salary?: { min?: number; max?: number; currency?: string; period?: string; text?: string }; remoteType: RemoteType; languageRequirement: { language: string; level?: string; required?: boolean }[]; score?: number; decision?: JobDecision; status: JobStatus; }
 export type JobHydratedDocument = HydratedDocument<JobDocument>;
 
 const jobSchema = new Schema<JobDocument>({
@@ -18,7 +18,8 @@ const jobSchema = new Schema<JobDocument>({
   remoteType: { type: String, enum: ['remote', 'hybrid', 'onsite', 'unknown'], default: 'unknown', required: true },
   languageRequirement: { type: [{ language: { type: String, required: true }, level: String, required: Boolean }], default: [] },
   score: { type: Number, min: 0, max: 100 },
-  status: { type: String, enum: ['discovered', 'analyzed', 'saved', 'dismissed', 'applied'], default: 'discovered', required: true },
+  decision: { type: String, enum: ['apply', 'maybe', 'ignore'] },
+  status: { type: String, enum: ['new', 'saved', 'ignored', 'ready_to_apply', 'applied', 'failed'], default: 'new', required: true },
 }, { timestamps: true });
 jobSchema.index({ source: 1, url: 1 }, { unique: true });
 
