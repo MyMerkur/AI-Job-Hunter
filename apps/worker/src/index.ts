@@ -1,19 +1,27 @@
-import 'dotenv/config';
-import { chromium } from 'playwright';
+import { connectToDatabase, disconnectFromDatabase } from './db/connect.js';
+import { env } from './config/env.js';
+import { saveMockJobs } from './services/mock-scraper.js';
+import { scoreJobs } from './services/job-scorer.js';
 
-/** Opens a page for future form analysis. Deliberately does not click submit. */
-async function inspectApplicationPage(url: string) {
-  const browser = await chromium.launch({ headless: process.env.PLAYWRIGHT_HEADLESS !== 'false' });
+type WorkerCommand = 'scrape:startupjobs' | 'scrape:jobs' | 'score:jobs';
+
+async function run(command: WorkerCommand | undefined): Promise<void> {
+  if (!command || !['scrape:startupjobs', 'scrape:jobs', 'score:jobs'].includes(command)) {
+    throw new Error('Usage: scrape:startupjobs | scrape:jobs | score:jobs');
+  }
+  await connectToDatabase(env.mongoUri);
   try {
-    const page = await browser.newPage();
-    await page.goto(url, { waitUntil: 'domcontentloaded' });
-    console.log(`Inspected application page: ${await page.title()}`);
-    // Future: identify inputs and prepare a user-reviewed draft. Never submit here.
+    if (command === 'score:jobs') await scoreJobs();
+    else {
+      const jobs = await saveMockJobs();
+      await scoreJobs(jobs);
+    }
   } finally {
-    await browser.close();
+    await disconnectFromDatabase();
   }
 }
 
-const url = process.argv[2];
-if (url) void inspectApplicationPage(url);
-else console.log('Worker ready. Pass a URL to inspect a page without submitting anything.');
+run(process.argv[2] as WorkerCommand | undefined).catch((error: unknown) => {
+  console.error('Worker failed:', error);
+  process.exitCode = 1;
+});

@@ -39,6 +39,17 @@ To run the worker in non-submitting inspection mode:
 pnpm --filter @ai-job-hunter/worker dev -- https://example.com
 ```
 
+## Mock job worker
+
+The worker currently writes five deterministic sample jobs to MongoDB; it does not scrape or apply to real websites.
+
+```bash
+pnpm --filter worker playwright:install
+pnpm --filter worker scrape:startupjobs
+pnpm --filter worker scrape:jobs
+pnpm --filter worker score:jobs
+```
+
 ## CV upload API
 
 Start MongoDB and the API, then submit one PDF or DOCX file (10 MB by default):

@@ -94,12 +94,18 @@ importers:
 
   apps/worker:
     dependencies:
+      '@ai-job-hunter/scoring':
+        specifier: workspace:*
+        version: link:../../packages/scoring
       '@ai-job-hunter/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       dotenv:
         specifier: ^16.5.0
         version: 16.6.1
+      mongoose:
+        specifier: ^9.7.2
+        version: 9.7.2
       playwright:
         specifier: ^1.52.0
         version: 1.61.0

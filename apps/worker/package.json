@@ -9,12 +9,21 @@
     "start": "node dist/index.js",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
-    "playwright:install": "playwright install chromium"
+    "playwright:install": "playwright install chromium",
+    "scrape:startupjobs": "tsx src/index.ts scrape:startupjobs",
+    "scrape:jobs": "tsx src/index.ts scrape:jobs",
+    "score:jobs": "tsx src/index.ts score:jobs"
   },
   "dependencies": {
+    "@ai-job-hunter/scoring": "workspace:*",
     "@ai-job-hunter/shared": "workspace:*",
+    "@ai-job-hunter/scoring": "workspace:*",
     "dotenv": "^16.5.0",
+    "mongoose": "^9.7.2",
+    "mongoose": "^9.7.2",
     "playwright": "^1.52.0"
   },
-  "devDependencies": { "tsx": "^4.19.4" }
+  "devDependencies": {
+    "tsx": "^4.19.4"
+  }
 }
