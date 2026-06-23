@@ -25,7 +25,10 @@ export async function scoreJobs(jobs?: WorkerJobHydratedDocument[]): Promise<voi
       title: job.title, description: job.description, location: job.location,
       languageRequirement: job.languageRequirement, remoteType: job.remoteType, cvRawText,
     });
-    await WorkerJobModel.updateOne({ _id: job._id }, { $set: { score: result.score, decision: result.decision, status: statusForDecision(result.decision) } });
+    await WorkerJobModel.updateOne({ _id: job._id }, { $set: {
+      score: result.score, decision: result.decision, status: statusForDecision(result.decision),
+      scoreDetails: { positiveSignals: result.positiveSignals, negativeSignals: result.negativeSignals, risks: result.risks },
+    } });
     console.log(`${job.title}: ${result.score}/100 (${result.decision})`);
   }
   console.log(`Scored ${records.length} job records.`);

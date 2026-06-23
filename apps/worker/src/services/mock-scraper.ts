@@ -12,7 +12,7 @@ const sampleJobs: WorkerJobDocument[] = [
 export async function saveMockJobs(): Promise<WorkerJobHydratedDocument[]> {
   const results = await Promise.all(sampleJobs.map((job) => WorkerJobModel.findOneAndUpdate(
     { source: job.source, url: job.url },
-    { $set: { ...job, status: 'new' }, $unset: { score: 1, decision: 1 } },
+    { $set: { ...job, status: 'new' }, $unset: { score: 1, decision: 1, scoreDetails: 1 } },
     { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
   )));
   const jobs = results.filter((job): job is WorkerJobHydratedDocument => job !== null);

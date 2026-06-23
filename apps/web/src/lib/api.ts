@@ -1,4 +1,4 @@
-import type { CVProfile, HealthResponse } from '@ai-job-hunter/shared';
+import type { CVProfile, HealthResponse, Job, JobStatus } from '@ai-job-hunter/shared';
 
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001').replace(/\/$/, '');
 
@@ -40,4 +40,33 @@ export function uploadCv(file: File, name: string, onProgress: (percent: number)
     };
     request.send(formData);
   });
+}
+
+type ApiJob = Omit<Job, 'id'> & { id?: string; _id?: string };
+function normalizeJob(job: ApiJob): Job { return { ...job, id: job.id ?? job._id ?? '' }; }
+
+export interface JobFilters { status?: JobStatus; minScore?: number; }
+
+export async function getJobs(filters: JobFilters = {}): Promise<Job[]> {
+  const query = new URLSearchParams();
+  if (filters.status) query.set('status', filters.status);
+  if (filters.minScore !== undefined) query.set('minScore', String(filters.minScore));
+  const response = await fetch(`${apiBaseUrl}/api/jobs${query.size ? `?${query}` : ''}`);
+  if (!response.ok) throw new Error(`İş listesi alınamadı: ${response.status}`);
+  const payload = await response.json() as { jobs: ApiJob[] };
+  return payload.jobs.map(normalizeJob);
+}
+
+export async function getJob(id: string): Promise<Job> {
+  const response = await fetch(`${apiBaseUrl}/api/jobs/${id}`);
+  if (!response.ok) throw new Error(`İş detayı alınamadı: ${response.status}`);
+  const payload = await response.json() as { job: ApiJob };
+  return normalizeJob(payload.job);
+}
+
+export async function updateJobStatus(id: string, status: JobStatus): Promise<Job> {
+  const response = await fetch(`${apiBaseUrl}/api/jobs/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
+  const payload = await response.json() as { job?: ApiJob; error?: string };
+  if (!response.ok || !payload.job) throw new Error(payload.error ?? `İş durumu güncellenemedi: ${response.status}`);
+  return normalizeJob(payload.job);
 }

@@ -48,6 +48,12 @@ export interface LanguageRequirement {
   required?: boolean;
 }
 
+export interface JobScoreDetails {
+  positiveSignals: string[];
+  negativeSignals: string[];
+  risks: string[];
+}
+
 export interface Job {
   id: EntityId;
   userId?: EntityId;
@@ -62,6 +68,7 @@ export interface Job {
   languageRequirement: LanguageRequirement[];
   score?: number;
   decision?: JobDecision;
+  scoreDetails?: JobScoreDetails;
   status: JobStatus;
   createdAt: ISODateString;
   updatedAt: ISODateString;

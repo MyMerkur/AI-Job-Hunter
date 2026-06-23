@@ -1,5 +1,5 @@
 import mongoose, { type HydratedDocument, type Types } from 'mongoose';
-import type { JobDecision, JobStatus, RemoteType } from '@ai-job-hunter/shared';
+import type { JobDecision, JobScoreDetails, JobStatus, RemoteType } from '@ai-job-hunter/shared';
 
 const { Schema, model, models } = mongoose;
 
@@ -16,6 +16,7 @@ export interface WorkerJobDocument {
   languageRequirement: { language: string; level?: string; required?: boolean }[];
   score?: number;
   decision?: JobDecision;
+  scoreDetails?: JobScoreDetails;
   status: JobStatus;
 }
 export type WorkerJobHydratedDocument = HydratedDocument<WorkerJobDocument>;
@@ -30,6 +31,7 @@ const jobSchema = new Schema<WorkerJobDocument>({
   languageRequirement: { type: [{ language: { type: String, required: true }, level: String, required: Boolean }], default: [] },
   score: { type: Number, min: 0, max: 100 },
   decision: { type: String, enum: ['apply', 'maybe', 'ignore'] },
+  scoreDetails: { positiveSignals: { type: [String], default: [] }, negativeSignals: { type: [String], default: [] }, risks: { type: [String], default: [] } },
   status: { type: String, enum: ['new', 'saved', 'ignored', 'ready_to_apply', 'applied', 'failed'], default: 'new', required: true },
 }, { timestamps: true, collection: 'jobs' });
 
