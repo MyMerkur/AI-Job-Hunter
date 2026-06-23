@@ -37,4 +37,5 @@ export const env = {
   cvUploadMaxBytes: parsedCvUploadMaxBytes,
   cvExtractionTimeoutMs: parsedCvExtractionTimeoutMs,
   cvUploadDirectory: resolve(currentDirectory, '../../../../uploads/cv'),
+  generatedCvDirectory: resolve(currentDirectory, '../../../../generated/cvs'),
 };

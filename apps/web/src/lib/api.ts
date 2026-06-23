@@ -110,6 +110,16 @@ export async function updateApplicationStatus(id: string, status: ApplicationSta
   return normalizeApplication(payload.application);
 }
 
+export function generatedCvMarkdownDownloadUrl(id: string): string { return `${apiBaseUrl}/api/generated-cv/${id}/download/markdown`; }
+export function generatedCvPdfDownloadUrl(id: string): string { return `${apiBaseUrl}/api/generated-cv/${id}/download/pdf`; }
+
+export async function exportGeneratedCvPdf(id: string): Promise<GeneratedCV> {
+  const response = await fetch(`${apiBaseUrl}/api/generated-cv/${id}/export-pdf`, { method: 'POST' });
+  const payload = await response.json() as { generatedCv?: ApiGeneratedCV; error?: string };
+  if (!response.ok || !payload.generatedCv) throw new Error(payload.error ?? `PDF oluşturulamadı: ${response.status}`);
+  return normalizeGeneratedCV(payload.generatedCv);
+}
+
 export type PreparationProvider = 'auto' | 'rule_based' | 'manual_chatgpt' | 'ollama';
 export interface AIProviderHealth { provider: Exclude<PreparationProvider, 'auto'>; available: boolean; message: string; }
 export interface AIHealthResponse { requestedProvider: PreparationProvider; providerUsed: Exclude<PreparationProvider, 'auto'>; fallbackActive: boolean; warnings: string[]; health: AIProviderHealth[]; }

@@ -1,4 +1,6 @@
 import type { CandidateProfile } from '@ai-job-hunter/shared';
+export { generateCvPdf } from './pdf-generator.js';
+export type { GenerateCvPdfInput } from './pdf-generator.js';
 
 export interface ParsedCv { rawText: string; profile: CandidateProfile; }
 

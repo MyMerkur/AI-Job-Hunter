@@ -3,7 +3,19 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "scripts": { "build": "tsc", "lint": "tsc --noEmit", "typecheck": "tsc --noEmit" },
-  "dependencies": { "@ai-job-hunter/shared": "workspace:*" }
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ai-job-hunter/shared": "workspace:*",
+    "pdfkit": "^0.19.1"
+  },
+  "devDependencies": {
+    "@types/pdfkit": "^0.17.6"
+  }
 }

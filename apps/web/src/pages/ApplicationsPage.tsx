@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ApplicationStatus } from '@ai-job-hunter/shared';
-import { getApplication, getApplications, type ApplicationDetail, type ApplicationListItem, updateApplicationStatus } from '../lib/api.js';
+import { exportGeneratedCvPdf, generatedCvMarkdownDownloadUrl, generatedCvPdfDownloadUrl, getApplication, getApplications, type ApplicationDetail, type ApplicationListItem, updateApplicationStatus } from '../lib/api.js';
 
 const statuses: Array<{ value: ApplicationStatus; label: string }> = [
   { value: 'prepared', label: 'Hazırlandı' }, { value: 'reviewed', label: 'İncelendi' }, { value: 'applied', label: 'Başvuruldu' }, { value: 'rejected', label: 'Reddedildi' }, { value: 'failed', label: 'Başarısız' },
@@ -23,7 +23,12 @@ export function ApplicationsPage() {
 
 function ApplicationDraft({ detail }: { detail: ApplicationDetail }) {
   const [copied, setCopied] = useState(false);
-  const isManual = detail.generatedCv?.provider === 'manual_chatgpt';
-  async function copyPrompt() { if (!detail.generatedCv) return; await navigator.clipboard.writeText(`CV prompt:\n${detail.generatedCv.content}\n\nCover letter prompt:\n${detail.generatedCv.coverLetterContent}`); setCopied(true); }
-  return <section><p className="section-label">BAŞVURU TASLAĞI</p><h2>{detail.job?.title ?? 'İş kaydı'}</h2>{isManual && <button className="copy-button" onClick={() => void copyPrompt()}>{copied ? 'Kopyalandı' : 'ChatGPT promptunu kopyala'}</button>}<h3>Uyarlanmış CV (Markdown)</h3><pre className="raw-text-preview">{detail.generatedCv?.content ?? 'Üretilen CV bulunamadı.'}</pre><h3>Cover letter (Markdown)</h3><pre className="raw-text-preview">{detail.generatedCv?.coverLetterContent ?? 'Üretilen cover letter bulunamadı.'}</pre></section>;
+  const [generatedCv, setGeneratedCv] = useState(detail.generatedCv);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [exportError, setExportError] = useState<string>();
+  const isManual = generatedCv?.provider === 'manual_chatgpt';
+  useEffect(() => setGeneratedCv(detail.generatedCv), [detail.generatedCv]);
+  async function copyPrompt() { if (!generatedCv) return; await navigator.clipboard.writeText(`CV prompt:\n${generatedCv.content}\n\nCover letter prompt:\n${generatedCv.coverLetterContent}`); setCopied(true); }
+  async function createPdf() { if (!generatedCv) return; setIsExportingPdf(true); setExportError(undefined); try { setGeneratedCv(await exportGeneratedCvPdf(generatedCv.id)); } catch (cause) { setExportError(cause instanceof Error ? cause.message : 'PDF oluşturulamadı.'); } finally { setIsExportingPdf(false); } }
+  return <section><p className="section-label">BAŞVURU TASLAĞI</p><h2>{detail.job?.title ?? 'İş kaydı'}</h2>{generatedCv && <div className="download-actions"><a className="copy-button" href={generatedCvMarkdownDownloadUrl(generatedCv.id)}>Markdown indir</a>{generatedCv.pdfPath ? <a className="copy-button" href={generatedCvPdfDownloadUrl(generatedCv.id)}>PDF indir</a> : <button className="copy-button" onClick={() => void createPdf()} disabled={isExportingPdf}>{isExportingPdf ? 'PDF oluşturuluyor…' : 'PDF oluştur'}</button>}</div>}{exportError && <p className="form-error">{exportError}</p>}{isManual && <button className="copy-button" onClick={() => void copyPrompt()}>{copied ? 'Kopyalandı' : 'ChatGPT promptunu kopyala'}</button>}<h3>Uyarlanmış CV (Markdown)</h3><pre className="raw-text-preview">{generatedCv?.content ?? 'Üretilen CV bulunamadı.'}</pre><h3>Cover letter (Markdown)</h3><pre className="raw-text-preview">{generatedCv?.coverLetterContent ?? 'Üretilen cover letter bulunamadı.'}</pre></section>;
 }
