@@ -1,4 +1,4 @@
-import type { CVProfile, HealthResponse, Job, JobStatus } from '@ai-job-hunter/shared';
+import type { Application, ApplicationLog, ApplicationStatus, CVProfile, GeneratedCV, HealthResponse, Job, JobStatus } from '@ai-job-hunter/shared';
 
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001').replace(/\/$/, '');
 
@@ -69,4 +69,35 @@ export async function updateJobStatus(id: string, status: JobStatus): Promise<Jo
   const payload = await response.json() as { job?: ApiJob; error?: string };
   if (!response.ok || !payload.job) throw new Error(payload.error ?? `İş durumu güncellenemedi: ${response.status}`);
   return normalizeJob(payload.job);
+}
+
+type ApiApplication = Omit<Application, 'id'> & { id?: string; _id?: string };
+type ApiGeneratedCV = Omit<GeneratedCV, 'id'> & { id?: string; _id?: string };
+type ApiApplicationLog = Omit<ApplicationLog, 'id'> & { id?: string; _id?: string };
+function normalizeApplication(application: ApiApplication): Application { return { ...application, id: application.id ?? application._id ?? '' }; }
+function normalizeGeneratedCV(generatedCv: ApiGeneratedCV): GeneratedCV { return { ...generatedCv, id: generatedCv.id ?? generatedCv._id ?? '' }; }
+function normalizeLog(log: ApiApplicationLog): ApplicationLog { return { ...log, id: log.id ?? log._id ?? '' }; }
+
+export interface ApplicationListItem { application: Application; job: Pick<Job, 'id' | 'title' | 'company' | 'score'> | null; }
+export interface ApplicationDetail extends ApplicationListItem { generatedCv: GeneratedCV | null; logs: ApplicationLog[]; }
+
+export async function getApplications(): Promise<ApplicationListItem[]> {
+  const response = await fetch(`${apiBaseUrl}/api/applications`);
+  if (!response.ok) throw new Error(`Başvurular alınamadı: ${response.status}`);
+  const payload = await response.json() as { applications: Array<{ application: ApiApplication; job: ApiJob | null }> };
+  return payload.applications.map((item) => ({ application: normalizeApplication(item.application), job: item.job ? normalizeJob(item.job) : null }));
+}
+
+export async function getApplication(id: string): Promise<ApplicationDetail> {
+  const response = await fetch(`${apiBaseUrl}/api/applications/${id}`);
+  if (!response.ok) throw new Error(`Başvuru detayı alınamadı: ${response.status}`);
+  const payload = await response.json() as { application: ApiApplication; job: ApiJob | null; generatedCv: ApiGeneratedCV | null; logs: ApiApplicationLog[] };
+  return { application: normalizeApplication(payload.application), job: payload.job ? normalizeJob(payload.job) : null, generatedCv: payload.generatedCv ? normalizeGeneratedCV(payload.generatedCv) : null, logs: payload.logs.map(normalizeLog) };
+}
+
+export async function updateApplicationStatus(id: string, status: ApplicationStatus): Promise<Application> {
+  const response = await fetch(`${apiBaseUrl}/api/applications/${id}/status`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
+  const payload = await response.json() as { application?: ApiApplication; error?: string };
+  if (!response.ok || !payload.application) throw new Error(payload.error ?? `Başvuru durumu güncellenemedi: ${response.status}`);
+  return normalizeApplication(payload.application);
 }

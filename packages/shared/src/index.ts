@@ -8,7 +8,8 @@ export type JobStatus = 'new' | 'saved' | 'ignored' | 'ready_to_apply' | 'applie
 export type JobDecision = 'apply' | 'maybe' | 'ignore';
 export type JobAnalysisStatus = 'pending' | 'completed' | 'failed';
 export type GeneratedCvStatus = 'draft' | 'ready' | 'archived';
-export type ApplicationStatus = 'draft' | 'prepared' | 'ready_for_review' | 'submitted' | 'withdrawn' | 'rejected' | 'interviewing' | 'offer';
+export type ApplicationStatus = 'draft' | 'prepared' | 'reviewed' | 'ready_for_review' | 'submitted' | 'withdrawn' | 'rejected' | 'interviewing' | 'offer' | 'applied' | 'failed';
+export type AIProviderName = 'rule_based' | 'manual_chatgpt' | 'ollama';
 export type RemoteType = 'remote' | 'hybrid' | 'onsite' | 'unknown';
 
 export interface User {
@@ -95,6 +96,7 @@ export interface GeneratedCV {
   jobId?: EntityId;
   content: string;
   coverLetterContent: string;
+  provider?: AIProviderName;
   format: 'text' | 'markdown' | 'pdf' | 'docx';
   status: GeneratedCvStatus;
   createdAt: ISODateString;

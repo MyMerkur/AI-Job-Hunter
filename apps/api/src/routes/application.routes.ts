@@ -2,6 +2,7 @@ import { ManualChatGPTProvider, OllamaProvider, RuleBasedAIProvider, type AIProv
 import { Router } from 'express';
 import type { Router as ExpressRouter } from 'express';
 import mongoose from 'mongoose';
+import type { ApplicationStatus } from '@ai-job-hunter/shared';
 import { HttpError } from '../lib/http-error.js';
 import { ApplicationLogModel } from '../models/application-log.model.js';
 import { ApplicationModel } from '../models/application.model.js';
@@ -11,6 +12,7 @@ import { JobModel } from '../models/job.model.js';
 
 type ProviderName = 'rule_based' | 'manual_chatgpt' | 'ollama';
 const providerNames: ProviderName[] = ['rule_based', 'manual_chatgpt', 'ollama'];
+const editableStatuses: ApplicationStatus[] = ['prepared', 'reviewed', 'applied', 'rejected', 'failed'];
 
 function createProvider(name: ProviderName): AIProvider {
   if (name === 'manual_chatgpt') return new ManualChatGPTProvider();
@@ -51,7 +53,7 @@ applicationRouter.post('/prepare', async (request, response) => {
 
   const generatedCv = await GeneratedCVModel.create({
     cvProfileId: cvProfile._id, jobId: job._id, content: tailoredCv.content, coverLetterContent: coverLetter.content,
-    format: 'markdown', status: 'ready',
+    provider: providerName as ProviderName, format: 'markdown', status: 'ready',
   });
   const application = await ApplicationModel.create({
     jobId: job._id, cvProfileId: cvProfile._id, generatedCvId: generatedCv._id, status: 'prepared',
@@ -69,16 +71,31 @@ applicationRouter.post('/prepare', async (request, response) => {
 
 applicationRouter.get('/', async (_request, response) => {
   const applications = await ApplicationModel.find().sort({ createdAt: -1 });
-  response.json({ applications });
+  const jobs = await JobModel.find({ _id: { $in: applications.map((application) => application.jobId) } }).select('title company score');
+  const jobsById = new Map(jobs.map((job) => [job._id.toString(), job]));
+  response.json({ applications: applications.map((application) => ({ application, job: jobsById.get(application.jobId.toString()) ?? null })) });
 });
 
 applicationRouter.get('/:id', async (request, response) => {
   if (!mongoose.isValidObjectId(request.params.id)) throw new HttpError(400, 'Geçersiz application kimliği.');
   const application = await ApplicationModel.findById(request.params.id);
   if (!application) throw new HttpError(404, 'Application bulunamadı.');
-  const [generatedCv, logs] = await Promise.all([
+  const [generatedCv, logs, job] = await Promise.all([
     application.generatedCvId ? GeneratedCVModel.findById(application.generatedCvId) : null,
     ApplicationLogModel.find({ applicationId: application._id }).sort({ createdAt: 1 }),
+    JobModel.findById(application.jobId).select('title company score'),
   ]);
-  response.json({ application, generatedCv, logs });
+  response.json({ application, generatedCv, logs, job });
+});
+
+applicationRouter.patch('/:id/status', async (request, response) => {
+  if (!mongoose.isValidObjectId(request.params.id)) throw new HttpError(400, 'Geçersiz application kimliği.');
+  const status = request.body?.status;
+  if (typeof status !== 'string' || !editableStatuses.includes(status as ApplicationStatus)) {
+    throw new HttpError(400, `status şu değerlerden biri olmalıdır: ${editableStatuses.join(', ')}`);
+  }
+  const application = await ApplicationModel.findByIdAndUpdate(request.params.id, { $set: { status } }, { returnDocument: 'after' });
+  if (!application) throw new HttpError(404, 'Application bulunamadı.');
+  await ApplicationLogModel.create({ applicationId: application._id, action: 'application_status_updated', message: `Application durumu ${status} olarak güncellendi.`, metadata: { status } });
+  response.json({ application });
 });
