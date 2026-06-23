@@ -12,6 +12,7 @@ import { applicationRouter } from './routes/application.routes.js';
 import { aiRouter } from './routes/ai.routes.js';
 import { generatedCvRouter } from './routes/generated-cv.routes.js';
 import { taskRouter } from './routes/task.routes.js';
+import { automationSettingsRouter } from './routes/automation-settings.routes.js';
 
 export const app: Express = express();
 
@@ -35,6 +36,7 @@ app.use('/api/applications', applicationRouter);
 app.use('/api/ai', aiRouter);
 app.use('/api/generated-cv', generatedCvRouter);
 app.use('/api/tasks', taskRouter);
+app.use('/api/settings/automation', automationSettingsRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

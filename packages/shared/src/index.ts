@@ -141,6 +141,17 @@ export interface Task {
   updatedAt: ISODateString;
 }
 
+export interface AutomationSettings {
+  autoAnalyzeJobs: boolean;
+  autoPrepareApplications: boolean;
+  minScoreToPrepare: number;
+  minScoreToAssistant: number;
+  requireHumanReviewBeforeSubmit: true;
+  blockedKeywords: string[];
+  preferredKeywords: string[];
+  updatedAt: ISODateString;
+}
+
 // Backward-compatible first-pass contracts.
 export interface JobListing {
   title: string;

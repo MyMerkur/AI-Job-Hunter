@@ -6,3 +6,4 @@ export * from './generated-cv.model.js';
 export * from './application.model.js';
 export * from './application-log.model.js';
 export * from './task.model.js';
+export * from './automation-settings.model.js';

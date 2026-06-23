@@ -1,4 +1,4 @@
-import type { Application, ApplicationLog, ApplicationStatus, CVProfile, GeneratedCV, HealthResponse, Job, JobStatus, Task } from '@ai-job-hunter/shared';
+import type { Application, ApplicationLog, ApplicationStatus, AutomationSettings, CVProfile, GeneratedCV, HealthResponse, Job, JobStatus, Task } from '@ai-job-hunter/shared';
 
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001').replace(/\/$/, '');
 
@@ -136,6 +136,20 @@ export async function getTasks(): Promise<Task[]> {
   const payload = await response.json() as { tasks?: ApiTask[]; error?: string };
   if (!response.ok || !payload.tasks) throw new Error(payload.error ?? `Task listesi alınamadı: ${response.status}`);
   return payload.tasks.map(normalizeTask);
+}
+
+export async function getAutomationSettings(): Promise<AutomationSettings> {
+  const response = await fetch(`${apiBaseUrl}/api/settings/automation`);
+  const payload = await response.json() as { settings?: AutomationSettings; error?: string };
+  if (!response.ok || !payload.settings) throw new Error(payload.error ?? `Otomasyon ayarları alınamadı: ${response.status}`);
+  return payload.settings;
+}
+
+export async function updateAutomationSettings(settings: Omit<AutomationSettings, 'updatedAt' | 'requireHumanReviewBeforeSubmit'>): Promise<AutomationSettings> {
+  const response = await fetch(`${apiBaseUrl}/api/settings/automation`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settings) });
+  const payload = await response.json() as { settings?: AutomationSettings; error?: string };
+  if (!response.ok || !payload.settings) throw new Error(payload.error ?? `Otomasyon ayarları kaydedilemedi: ${response.status}`);
+  return payload.settings;
 }
 
 export function generatedCvMarkdownDownloadUrl(id: string): string { return `${apiBaseUrl}/api/generated-cv/${id}/download/markdown`; }

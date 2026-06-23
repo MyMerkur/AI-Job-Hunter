@@ -5,6 +5,7 @@ import { assistApplication } from './application-assistant.js';
 import { scoreJobs } from './job-scorer.js';
 import { saveMockJobs } from './mock-scraper.js';
 import { scrapeStartupJobs } from './startupjobs-scraper.js';
+import { autoPrepareScrapedJobs, shouldAutoAnalyzeJobs } from './automation.js';
 
 let processing = false;
 
@@ -16,20 +17,21 @@ async function runPrepareApplicationTask(task: WorkerTaskHydratedDocument): Prom
   }
 }
 
-async function dispatchTask(task: WorkerTaskHydratedDocument): Promise<void> {
+async function dispatchTask(task: WorkerTaskHydratedDocument): Promise<string[]> {
   const type: TaskType = task.type;
   if (type === 'scrape_jobs') {
     const jobs = task.payload.source === 'mock' ? await saveMockJobs() : await scrapeStartupJobs();
+    if (!await shouldAutoAnalyzeJobs()) return [`${jobs.length} iş bulundu; autoAnalyzeJobs kapalı olduğu için skorlanmadı.`];
     await scoreJobs(jobs);
-    return;
+    return [`${jobs.length} iş skorlandı.`, ...await autoPrepareScrapedJobs(jobs)];
   }
-  if (type === 'score_jobs') { await scoreJobs(); return; }
-  if (type === 'prepare_application') { await runPrepareApplicationTask(task); return; }
+  if (type === 'score_jobs') { await scoreJobs(); return ['İşler manuel score_jobs göreviyle skorlandı.']; }
+  if (type === 'prepare_application') { await runPrepareApplicationTask(task); return ['Application hazırlama isteği API üzerinden tamamlandı.']; }
   if (type === 'start_application_assistant') {
     const applicationId = task.payload.applicationId;
     if (typeof applicationId !== 'string') throw new Error('start_application_assistant payload.applicationId gerekli.');
     await assistApplication(applicationId);
-    return;
+    return ['Playwright application assistant submit etmeden durdu.'];
   }
   throw new Error(`Desteklenmeyen task türü: ${type}`);
 }
@@ -45,8 +47,8 @@ export async function processNextTask(): Promise<boolean> {
   if (!task) return false;
   processing = true;
   try {
-    await dispatchTask(task);
-    await WorkerTaskModel.updateOne({ _id: task._id, status: 'running' }, { $set: { status: 'completed' }, $push: { logs: { message: 'Task başarıyla tamamlandı.', createdAt: new Date() } } });
+    const messages = await dispatchTask(task);
+    await WorkerTaskModel.updateOne({ _id: task._id, status: 'running' }, { $set: { status: 'completed' }, $push: { logs: { $each: [...messages, 'Task başarıyla tamamlandı.'].map((message) => ({ message, createdAt: new Date() })) } } });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     await WorkerTaskModel.updateOne({ _id: task._id, status: 'running' }, { $set: { status: 'failed', error: message }, $push: { logs: { message: `Task başarısız oldu: ${message}`, createdAt: new Date() } } });
