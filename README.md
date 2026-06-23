@@ -50,6 +50,10 @@ pnpm --filter worker scrape:jobs
 pnpm --filter worker score:jobs
 ```
 
+## AI providers
+
+`packages/ai` has no paid API dependency. `RuleBasedAIProvider` produces deterministic drafts, `OllamaProvider` is a non-network placeholder that reads `OLLAMA_BASE_URL`, and `ManualChatGPTProvider` saves copyable prompts in `generated/prompts` (Git-ignored). ChatGPT Plus does not provide backend API access; use the manual provider to paste prompts into ChatGPT’s web interface.
+
 ## CV upload API
 
 Start MongoDB and the API, then submit one PDF or DOCX file (10 MB by default):

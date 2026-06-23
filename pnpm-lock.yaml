@@ -116,6 +116,9 @@ importers:
 
   packages/ai:
     dependencies:
+      '@ai-job-hunter/scoring':
+        specifier: workspace:*
+        version: link:../scoring
       '@ai-job-hunter/shared':
         specifier: workspace:*
         version: link:../shared
