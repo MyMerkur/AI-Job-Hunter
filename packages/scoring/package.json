@@ -3,7 +3,19 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "scripts": { "build": "tsc", "lint": "tsc --noEmit", "typecheck": "tsc --noEmit" },
-  "dependencies": { "@ai-job-hunter/shared": "workspace:*" }
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ai-job-hunter/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.9"
+  }
 }
